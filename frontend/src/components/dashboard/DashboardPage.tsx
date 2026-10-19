@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { AlertTriangle, Info, RefreshCw } from "lucide-react";
 import { fetcher, qs } from "@/lib/client";
 import { fmtDate, fmtNum, fmtPct, fmtTime } from "@/lib/format";
+import { todayJakarta } from "@/lib/time";
 import type { Dashboard } from "@/services/aggregate";
 import { BlockGrid } from "../BlockGrid";
 import { ActivityBadge, DemoTag, EmptyState, ErrorState, KpiCard, PageHeader, Progress, Skel } from "../common";
@@ -69,11 +70,12 @@ export function DashboardPage() {
 
 function DashboardBody({ d, drill }: { d: Dashboard; drill: (x?: Record<string, string | undefined>) => void }) {
   const single = d.filters.from === d.filters.to;
+  const isToday = single && d.filters.to === todayJakarta(new Date(d.serverTime));
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {d.departments.map((dp, i) => (
-          <KpiCard key={dp.id} testId={`kpi-${dp.code.toLowerCase()}`} label={`${dp.name}${single ? " hari ini" : ""}`} value={fmtNum(dp.actual)} accent={deptColor(dp.code, i)}
+          <KpiCard key={dp.id} testId={`kpi-${dp.code.toLowerCase()}`} label={`${dp.name}${isToday ? " hari ini" : ""}`} value={fmtNum(dp.actual)} accent={deptColor(dp.code, i)}
             sub={<>Target {fmtNum(dp.target)} · <b>{fmtPct(dp.pct)}</b></>} onClick={() => drill({ departmentId: dp.id })} />
         ))}
         <KpiCard testId="kpi-achievement" label={`Capaian target (${d.metric?.name ?? "-"})`} value={fmtPct(d.metric?.pct)} accent="#10B981"
@@ -115,7 +117,7 @@ function LineTable({ d, drill }: { d: Dashboard; drill: (x?: Record<string, stri
         {ranked.map((l, i) => (
           <div key={l.id} className="rounded-lg border p-3" data-testid={`line-row-${l.code}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <button className="flex items-center gap-2 font-semibold text-navy hover:underline" onClick={() => drill({ lineId: l.id })}>
+              <button className="flex items-center gap-2 font-semibold text-navy hover:underline" data-testid={`line-drill-${l.code}`} onClick={() => drill({ lineId: l.id })}>
                 <span className={`grid h-6 w-6 place-items-center rounded-full text-xs text-white ${i === 0 ? "bg-emerald-500" : i === ranked.length - 1 && ranked.length > 1 ? "bg-red-500" : "bg-slate-400"}`}>{i + 1}</span>{l.name}
               </button>
               <div className="flex items-center gap-3 text-sm">
