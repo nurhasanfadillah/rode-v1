@@ -37,6 +37,11 @@ See original statement: RBAC on server, idempotency, aggregates from source tran
 - Vercel project `rode` (scope nurhasan-fadillahs-projects, root = frontend via CLI link), 10 production env vars set, production deployment Ready (alias rode-mu-eight.vercel.app, protected by Vercel Authentication); build ran migrations on Neon OK; /api/time verified.
 - Domain rode.redone.my.id added & verified in project; waiting for Cloudflare DNS: CNAME rode → 376b13e7efdd762e.vercel-dns-017.com (DNS only / grey cloud).
 
+## Implemented (2026-10-20) — GitHub auto-deploy
+- Pushed /app to github.com/nurhasanfadillah/rode-v1 (main); no secrets in history (.env ignored, .env.example kept).
+- Vercel project `rode` linked to repo, Root Directory = frontend; first Git deployment READY (aliases rode.redone.my.id, rode-mu-eight.vercel.app).
+- Note: CLI deploys must now run from /app (repo root) because rootDirectory=frontend.
+
 ## Backlog
 - P0: User adds Cloudflare CNAME; connect GitHub repo to Vercel for auto-deploy; revoke one-day Vercel token; change admin password.
 - P1 (Phase 2): daily & range reports, productivity analysis, CSV/Excel/print/PDF export with filter info, special schedules (holidays/overtime).
