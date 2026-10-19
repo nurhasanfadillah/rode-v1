@@ -42,6 +42,11 @@ See original statement: RBAC on server, idempotency, aggregates from source tran
 - Vercel project `rode` linked to repo, Root Directory = frontend; first Git deployment READY (aliases rode.redone.my.id, rode-mu-eight.vercel.app).
 - Note: CLI deploys must now run from /app (repo root) because rootDirectory=frontend.
 
+## Implemented (2026-10-20) — Reports & export
+- /reports (manager, super_admin): daily (from=to) & range report from the same aggregation service; sections departments, products, Sewing lines, block detail (daily), daily trend (range); filter meta + generated-at WIB.
+- GET /api/reports (JSON), GET /api/reports/export?format=csv|xlsx (CSV ; separated with BOM, Indonesian decimals, formula-injection safe; XLSX via exceljs with Info sheet + one sheet per section); export audited (report.export); print/PDF via window.print with print CSS.
+- Tests: vitest 26 pass; testing agent iteration_2 100% backend & frontend (run on local demo PGlite, preview switched back to Neon afterwards). Pushed to GitHub → Vercel auto-deploy READY (dcf89a0).
+
 ## Backlog
 - P0: User adds Cloudflare CNAME; connect GitHub repo to Vercel for auto-deploy; revoke one-day Vercel token; change admin password.
 - P1 (Phase 2): daily & range reports, productivity analysis, CSV/Excel/print/PDF export with filter info, special schedules (holidays/overtime).
