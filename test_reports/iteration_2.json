@@ -1,0 +1,25 @@
+{
+  "summary": "Tested Reports (Laporan) feature end-to-end, read-only. Backend: 12/12 pytest pass (daily/range JSON, filters dept/line/shift/product, invalid input 400, CSV BOM+semicolon+meta, CSV follows filter, valid XLSX zip with Info sheet, invalid format 400, unauth 401, operator 403). Frontend (desktop 1920 + mobile 390): manager sees 'Laporan' in nav; default today -> 'Laporan Produksi Harian' with meta (Periode, filters, 'Dibuat pada ... WIB') and sections departments/products/lines/blocks; '7 hari' -> 'Laporan Produksi Rentang Tanggal' + daily section with 7 rows (one per date), Indonesian number format (4.659, 64,7%), blocks section hidden; department + product filters change totals and meta; CSV/XLSX hrefs carry the current filter query; downloads work (RODE_Laporan_2026-10-14_2026-10-20.csv/.xlsx); print button calls window.print; print media hides aside/nav/header/filters/buttons, only report-document visible. Operator visiting /reports redirected to /input, export fetch 403. Mobile: no page-level horizontal overflow (scrollWidth 390), section tables scroll horizontally (552/356).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Reports mobile 390", "issues": ["Block detail table: 'Line 1' and time ranges wrap onto 2 lines because columns are narrow; consider whitespace-nowrap on cells (cosmetic)"]},
+      {"screen": "Reports range", "issues": ["Daily trend includes Sunday/non-working days and today with 0 rows (e.g. 'Min, 18 Okt 2026 0 0 0'). Acceptable, but could be labelled 'Libur' or skipped (product decision)"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_reports_export.py", "/app/test_reports/pytest/pytest_reports.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "export route: the audit() write runs before CSV/XLSX generation. If toXlsx throws, there's an audit entry for an export that never happened. Minor.",
+    "Date input max={today} only limits the 'to' field. The API lets clients ask for arbitrarily long ranges (e.g. years), and nothing caps it. Consider a max range (e.g. 366 days) in dashFilterSchema for reports/export to avoid heavy aggregation (rate limit 30/min helps).",
+    "Unconfirmed: in one automated run, one click on print-report-button logged 2 calls to window.print; other runs logged 1, and the stack trace showed a single onClick. Probably a test-harness artifact, and there is no app code that calls print twice."
+  ],
+  "updated_files": ["/app/backend/tests/test_reports_export.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "None (read-only feature; no records created)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Preview points to local demo PGlite DB (data 2026-10-14..19; today 2026-10-20 has none). Reports tests in /app/backend/tests/test_reports_export.py use fixed ranges 2026-10-13..19 and 2026-10-19. Range 7 hari totals: Printing 4.659/7.200, Sewing 4.843/4.800, Packing 4.442/6.600. Note /app/frontend/.env DATABASE_URL shows Neon but the running server uses PGlite per main agent."
+}
