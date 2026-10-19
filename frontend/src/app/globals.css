@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 223 82% 21%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 174 49% 95%;
+    --secondary-foreground: 223 82% 21%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 19% 35%;
+    --accent: 174 49% 93%;
+    --accent-foreground: 223 82% 21%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 85%;
+    --ring: 174 49% 46%;
+    --radius: 0.75rem;
+  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans antialiased; -webkit-tap-highlight-color: transparent; }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  ::selection { background: #3CAEA3; color: white; }
+}
+
+@layer components {
+  .num { @apply font-mono tabular-nums; }
+  .card-surface { @apply rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]; }
+  .label-xs { @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500; }
+}
+
+.recharts-cartesian-axis-tick-value { font-family: var(--font-mono); font-size: 11px; }

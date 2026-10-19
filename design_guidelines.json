@@ -1,0 +1,130 @@
+{
+  "project_name": "RODE - Redone Output Data Entry (PT REDONE BERKAH MANDIRI)",
+  "app_type": "industrial_pwa_and_dashboard",
+  "theme": {
+    "default_mode": "light",
+    "smart_tv_mode": "dark",
+    "palette": {
+      "primary_navy": "#0A2463",
+      "primary_navy_hover": "#061842",
+      "accent_teal": "#3CAEA3",
+      "accent_teal_light": "#E6F7F5",
+      "bg_light": "#F8FAFC",
+      "bg_card_light": "#FFFFFF",
+      "bg_smart_tv": "#070F26",
+      "bg_smart_tv_card": "#0F172A",
+      "text_primary": "#0F172A",
+      "text_secondary": "#475569",
+      "border_light": "#E2E8F0"
+    },
+    "status_block_colors": {
+      "not_started": {
+        "hex": "#94A3B8",
+        "bg_light": "bg-slate-200",
+        "text_light": "text-slate-700",
+        "border_light": "border-slate-300",
+        "bg_tv": "bg-slate-800",
+        "text_tv": "text-slate-300",
+        "label": "Belum Dimulai",
+        "icon": "Clock"
+      },
+      "empty_started": {
+        "hex": "#EF4444",
+        "bg_light": "bg-red-500",
+        "text_light": "text-white",
+        "border_light": "border-red-600",
+        "bg_tv": "bg-red-600",
+        "text_tv": "text-red-100",
+        "label": "Kosong (0 PCS)",
+        "icon": "AlertTriangle"
+      },
+      "below_target": {
+        "hex": "#F59E0B",
+        "bg_light": "bg-amber-400",
+        "text_light": "text-slate-900",
+        "border_light": "border-amber-500",
+        "bg_tv": "bg-amber-500",
+        "text_tv": "text-amber-950",
+        "label": "Di Bawah Target",
+        "icon": "TrendingDown"
+      },
+      "target_met": {
+        "hex": "#10B981",
+        "bg_light": "bg-emerald-500",
+        "text_light": "text-white",
+        "border_light": "border-emerald-600",
+        "bg_tv": "bg-emerald-500",
+        "text_tv": "text-white",
+        "label": "Target Tercapai",
+        "icon": "CheckCircle2"
+      },
+      "break_marker": {
+        "hex": "#6366F1",
+        "bg_light": "bg-indigo-100 text-indigo-800 border-indigo-300",
+        "bg_tv": "bg-indigo-950 text-indigo-300 border-indigo-700",
+        "label": "Istirahat",
+        "icon": "Coffee"
+      }
+    }
+  },
+  "typography": {
+    "heading_font": "Outfit, Plus Jakarta Sans, sans-serif",
+    "body_font": "Inter, DM Sans, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "scale": {
+      "h1_hero": "text-3xl sm:text-4xl font-bold tracking-tight",
+      "h2_section": "text-xl sm:text-2xl font-bold tracking-tight",
+      "h3_card": "text-lg font-semibold",
+      "body": "text-sm sm:text-base leading-relaxed",
+      "kpi_number": "text-3xl sm:text-4xl lg:text-5xl font-extrabold font-mono tracking-tight",
+      "tv_huge_number": "text-5xl sm:text-6xl lg:text-7xl font-black font-mono tracking-tighter"
+    }
+  },
+  "layouts_and_components": {
+    "operator_pwa": {
+      "type": "mobile_first",
+      "max_width": "max-w-md mx-auto min-h-screen pb-20 bg-slate-50",
+      "header": "Sticky header with PT REDONE BERKAH MANDIRI logo, active operator badge, shift info, and live clock (WIB)",
+      "plus_one_button": "h-36 sm:h-44 w-full rounded-2xl bg-[#0A2463] hover:bg-[#061842] active:scale-95 text-white shadow-xl shadow-navy-900/20 flex flex-col items-center justify-center gap-2 border-2 border-blue-400/30 transition-all cursor-pointer select-none touch-manipulation",
+      "block_grid": "Grid of 45-minute blocks for 8-hour shift. Each block displays: Time interval (e.g. 08:00-08:45), Target vs Actual count, Status color indicator with icon and tooltip. Click block to select active block or view details.",
+      "bottom_nav": "Fixed bottom navigation bar (Input, Riwayat, Profil) with active state in `#0A2463` and `#3CAEA3` highlight indicator."
+    },
+    "manager_dashboard": {
+      "type": "desktop_responsive",
+      "layout": "Sidebar navigation + top header + main bento content area",
+      "kpi_cards": "Grid of KPI cards (Sewing, Printing, Packing today total, Target, Achievement %, Active Lines count, Top Product, Last Updated timestamp)",
+      "idle_line_alert": "Banner highlight for idle lines (>15 mins without input) with status pulse indicator",
+      "charts_section": "Target vs Actual hourly bar chart, Department comparative line chart, Daily trend chart",
+      "tables": "Interactive product and line performance table with status badges and quick sorting"
+    },
+    "smart_tv_board": {
+      "route": "/display/production",
+      "theme": "Full-screen dark mode (`bg-[#070F26]`) high contrast for shop floor viewability from 10 meters",
+      "components": "Header with live status badge ('SISTEM LIVE' green pulse), server timestamp, shift info. Grid of line cards showing line leader, product name, block grid status, total achievement percentage bar, and hourly target vs actual."
+    },
+    "super_admin": {
+      "type": "data_management",
+      "tabs": "Departments, Production Lines, Products, User Accounts, Shift Schedules & Breaks, Target Matrix, Smart TV Display Tokens, Audit Log",
+      "ui_components": "Shadcn Table, Dialog form modals, Select, Switch, Tooltip, Sonner Toast for confirmation actions"
+    }
+  },
+  "image_urls": {
+    "sewing_factory": "https://images.pexels.com/photos/31090812/pexels-photo-31090812.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "printing_factory": "https://images.unsplash.com/photo-1598299803204-b73796f43289?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxNzV8MHwxfHNlYXJjaHwxfHx0ZXh0aWxlJTIwcHJpbnRpbmclMjBmYWN0b3J5JTIwd29ya2VyfGVufDB8fHx8MTc5MjM2NzE4Mnww&ixlib=rb-4.1.0&q=85",
+    "packing_warehouse": "https://images.pexels.com/photos/39351215/pexels-photo-39351215.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  },
+  "accessibility_and_localization": {
+    "language": "Indonesian (Bahasa Indonesia)",
+    "timezone": "WIB (UTC+7)",
+    "number_format": "Indonesian standard (1.000, 85,5%)",
+    "color_blind_support": "Status indicators MUST use both distinct colors AND Lucide icons + text labels",
+    "data_testid_rule": "All buttons, inputs, tabs, KPI items, line blocks, dialogs, and navigation links MUST include data-testid (kebab-case)"
+  },
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Use primary Navy #0A2463 for dominant branding and key CTAs, paired with Teal #3CAEA3 for progress & highlights.",
+    "Mobile operator view must have a prominent +1 PCS button with touch-manipulation and active feedback.",
+    "Ensure all block status grids explicitly show state via color, label text, and icon for complete accessibility.",
+    "Smart TV board must be high contrast dark mode (#070F26 background) with huge readable numbers for shop floor view.",
+    "Include data-testid on all interactive and data display elements for testing compliance."
+  ]
+}
