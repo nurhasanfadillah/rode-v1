@@ -1,0 +1,114 @@
+Vercel CLI 64.7.0 (Node.js 20.20.2)
+Deploying rode
+Uploading [--------------------] (0.0B/475.3KB)
+Uploading [=====---------------] (124.2KB/475.3KB)
+Uploading [==========----------] (242.8KB/475.3KB)
+Uploading [===============-----] (357.6KB/475.3KB)
+Uploading [====================] (475.3KB/475.3KB)
+  Inspect         https://vercel.com/nurhasan-fadillahs-projects/rode/HC6HN4rvQGHy2doRQormVKe7irfb
+  Production      https://rode-q7fm5vy7o-nurhasan-fadillahs-projects.vercel.app
+https://rode-q7fm5vy7o-nurhasan-fadillahs-projects.vercel.appBuilding…
+Building…
+Running build in Washington, D.C., USA (East) – iad1
+Build machine configuration: 2 cores, 8 GB
+Retrieving list of deployment files...
+Previous build caches not available.
+Downloading 105 deployment files...
+Running "vercel build"
+Vercel CLI 64.3.1
+Running "install" command: `yarn install --frozen-lockfile`...
+yarn install v1.22.19
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+[4/4] Building fresh packages...
+Done in 40.88s.
+Detected Next.js version: 15.5.28
+Running "yarn db:migrate && yarn build"
+yarn run v1.22.19
+$ tsx scripts/migrate.ts
+(node:153) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Migrations applied
+Done in 4.02s.
+yarn run v1.22.19
+$ next build
+▲ Next.js 15.5.28
+Creating an optimized production build ...
+✓ Compiled successfully in 29.8s
+Linting and checking validity of types ...
+Collecting page data ...
+Generating static pages (0/17) ...
+Generating static pages (4/17)
+Generating static pages (8/17)
+Generating static pages (12/17)
+✓ Generating static pages (17/17)
+Finalizing page optimization ...
+Collecting build traces ...
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                      185 B         103 kB
+├ ○ /_not-found                             1 kB         103 kB
+├ ƒ /admin/audit                          4.4 kB         123 kB
+├ ƒ /admin/master                        13.1 kB         155 kB
+├ ƒ /admin/schedule                      3.46 kB         136 kB
+├ ƒ /admin/settings                      5.83 kB         134 kB
+├ ƒ /admin/targets                       5.25 kB         147 kB
+├ ƒ /api/admin/[entity]                    185 B         103 kB
+├ ƒ /api/admin/[entity]/[id]               185 B         103 kB
+├ ƒ /api/admin/audit                       185 B         103 kB
+├ ƒ /api/admin/displays                    185 B         103 kB
+├ ƒ /api/admin/displays/[id]               185 B         103 kB
+├ ƒ /api/admin/schedule                    185 B         103 kB
+├ ƒ /api/admin/settings                    185 B         103 kB
+├ ƒ /api/admin/targets                     185 B         103 kB
+├ ƒ /api/auth/login                        185 B         103 kB
+├ ƒ /api/auth/logout                       185 B         103 kB
+├ ƒ /api/auth/me                           185 B         103 kB
+├ ƒ /api/dashboard                         185 B         103 kB
+├ ƒ /api/display                           185 B         103 kB
+├ ƒ /api/meta                              185 B         103 kB
+├ ƒ /api/operator/summary                  185 B         103 kB
+├ ƒ /api/time                              185 B         103 kB
+├ ƒ /api/transactions                      185 B         103 kB
+├ ƒ /api/transactions/[id]                 185 B         103 kB
+├ ƒ /api/transactions/[id]/[action]        185 B         103 kB
+├ ƒ /dashboard                           5.42 kB         246 kB
+├ ƒ /display/production                  8.27 kB         244 kB
+├ ƒ /history                              7.4 kB         149 kB
+├ ƒ /input                               6.68 kB         153 kB
+├ ƒ /login                               40.4 kB         158 kB
+└ ƒ /profile                             5.08 kB         118 kB
++ First Load JS shared by all             102 kB
+├ chunks/1255-60d8dc7c8c9309a1.js      46.3 kB
+├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+└ other shared chunks (total)          1.94 kB
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+Done in 61.86s.
+Traced Next.js server files in: 387.229ms
+Created all serverless functions in: 673.18ms
+Collected static files (public/, static/, .next/static): 10.971ms
+Build Completed in /vercel/output [2m]
+Deploying outputs...
+[2K[1A[2K[G  Production      https://rode-q7fm5vy7o-nurhasan-fadillahs-projects.vercel.app
+Completing…
+▲ Aliased         https://rode-mu-eight.vercel.app
+
+✓ Ready in 2m
+
+! Deployment Protection is on for this project (Vercel Authentication). Use `vercel curl` to access it.
+
+Next steps:
+- Check the production response:
+  vercel curl https://rode-mu-eight.vercel.app --scope nurhasan-fadillahs-projects
+- View build logs:
+  vercel inspect rode-q7fm5vy7o-nurhasan-fadillahs-projects.vercel.app --logs --scope nurhasan-fadillahs-projects
+- Create a new deployment from the same source:
+  vercel redeploy rode-q7fm5vy7o-nurhasan-fadillahs-projects.vercel.app --scope nurhasan-fadillahs-projects
