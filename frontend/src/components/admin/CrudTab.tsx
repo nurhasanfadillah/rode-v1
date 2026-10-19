@@ -73,6 +73,7 @@ function EntityForm({ entity, title, fields, row, onClose, onSaved }: { entity: 
     fields.forEach((f) => {
       const val = v[f.key];
       if (f.type === "password" && !val) return;
+      if (!row && (f.type === "text" || f.type === "textarea") && !f.required && val === "") return;
       if (row && val === init[f.key] && f.type !== "password") return;
       body[f.key] = f.type === "number" ? (val === "" || val == null ? null : Number(val)) : f.type === "select" && val === "" ? null : val;
     });

@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite"],
   allowedDevOrigins: ["*.preview.emergentagent.com", "*.preview.emergentcf.cloud", "*.cluster-11.preview.emergentcf.cloud", "redone-rode.cluster-11.preview.emergentcf.cloud"],
   poweredByHeader: false,
+  devIndicators: false,
   turbopack: { root: __dirname },
   async headers() {
     return [

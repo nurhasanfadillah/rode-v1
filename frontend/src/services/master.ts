@@ -16,7 +16,7 @@ const schemas = {
   departments: z.object({ code, name, kind: z.enum(["line_block", "daily"]), sortOrder: z.number().int().default(0), isActive: z.boolean().default(true) }),
   lines: z.object({ code, name, departmentId: z.string().uuid(), sortOrder: z.number().int().default(0), isActive: z.boolean().default(true) }),
   products: z.object({
-    code, name, category: optText, unit: z.string().trim().min(1).max(20).default("PCS"), defaultTarget: optInt, notes: optText,
+    code, name, category: optText, unit: z.string().trim().max(20).optional().transform((v) => v || "PCS"), defaultTarget: optInt, notes: optText,
     isActive: z.boolean().default(true),
   }),
   users: z.object({

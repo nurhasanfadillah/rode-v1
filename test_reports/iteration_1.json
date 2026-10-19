@@ -1,0 +1,49 @@
+{
+  "summary": "Frontend-only focused run (Playwright, public URL). Tested: op.sewing1 mobile input (+1 PCS, bulk 12, block grid, bottom nav), op.packing daily input (+50), manager dashboard (KPIs, charts, auto-poll update, KPI drill-down, /admin redirect), super admin tx correction, product add, Smart TV link create/open/revoke, operator /dashboard redirect. 1 functional bug found: adding a product with the optional 'Satuan' field left empty (as the UI hint 'Default PCS' suggests) fails with a validation error.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/admin/products", "issue": "Rejects unit: \"\" (zod min(1)) instead of falling back to default 'PCS'. The UI sends empty strings for empty optional text fields, so this breaks product creation from the UI."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CrudTab EntityForm (Master Data > Produk > Tambah)", "issue": "If you submit with Satuan empty, you get the toast 'Gagal menyimpan — unit: Too small: expected string to have >=1 characters' and the dialog stays open. It works once you type 'PCS'. Cause: CrudTab.tsx save() sends empty text values as \"\" (only number/select fields are converted to null). Fix: on create, leave out empty strings for non-required text/textarea fields (or turn them into null), or have the backend schema accept \"\" and default it to 'PCS'. Check that other entities' optional text fields don't hit the same problem.", "selector": "[data-testid='products-form-submit']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard / History filters, Packing daily input", "issues": ["Uses the browser's native <input type=date> (shows 'mm/dd/yyyy', US format) instead of a shadcn Calendar/Popover date picker with Indonesian format", "Dashboard date filters show empty 'mm/dd/yyyy' while the data is for today; prefilling today would be clearer"]},
+      {"screen": "Global (dev only)", "issues": ["The Next.js dev indicator 'N' badge overlaps the bottom-nav 'Input' item on mobile and the sidebar 'Keluar' on desktop. Dev only, but consider devIndicators:false"]},
+      {"screen": "Admin Settings display list", "issues": ["The revoked toggle label 'Dicabut · aktifkan' looks like a status rather than an action. Consider a separate status pill plus an 'Aktifkan' button"]}
+    ]
+  },
+  "passed_tests": [
+    "op.sewing1 login (390x844) -> /input; product-picker select; plus-one-button -> toast 'Tersimpan di server', line-total 0->1, current-block-qty 0->1, block-grid-block-1 state partial",
+    "bulk-quantity-input 12 + bulk-submit -> line total 1->13, block 13",
+    "Bottom nav Input/Riwayat/Profil navigation OK",
+    "Operator visiting /dashboard redirected to /input",
+    "op.packing daily-input 50 -> toast, department-total 9->59",
+    "Manager /dashboard: 7 KPI values + charts (blocks, departments, lines, daily) render; no console errors",
+    "Dashboard auto-updates without reload ~6s after API POST from a separate op.sewing2 context (13->18)",
+    "kpi-sewing click -> /history?from=..&to=..&departmentId=..&status=valid with filtered rows",
+    "Manager /admin/master redirected to /dashboard",
+    "Admin tx correction 5->4 with reason -> status 'Dikoreksi', correction trail shown, history row updated, toast 'Koreksi tersimpan'",
+    "Admin add product (with unit filled) -> 'Produk tersimpan', appears in search",
+    "Smart TV link created -> board renders, display-connection 'TERHUBUNG', display-clock ticking; revoke (confirm dialog) -> board shows 'TERPUTUS'; after reload display-error 'Token display tidak valid atau sudah dicabut'"
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "Fix product creation when optional Satuan (unit) is empty: either the frontend omits/nulls empty optional text fields in CrudTab save(), or the backend schema maps \"\" to default 'PCS'"
+  ],
+  "critical_code_review_comments": [
+    "CrudTab.tsx save(): empty optional text/textarea values are sent as \"\" instead of being left out or sent as null, so they conflict with backend min(1) validation",
+    "History page renders both the mobile cards and the desktop table in the DOM (CSS hides one), so testids like tx-status-pill are duplicated. Fine functionally, but it doubles the DOM size for long lists"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only)", "frontend": "95% (19/20 checks; product create with empty unit fails)"},
+  "test_credentials": "From /app/memory/test_credentials.md: admin/RodeAdmin2026!, manajer/Manajer123!, op.sewing1|op.sewing2|op.packing/Operator123!. All worked.",
+  "seed_data_creation": "Sewing tx today: Line1 +1 and +12 (op.sewing1), Line2 +5 corrected to 4 (op.sewing2, reason 'TEST koreksi UI'); Packing +50 (notes TEST_packing); products TEST_P1_xxxxx (UI) and TEST_P1_API (API); Smart TV link TEST_TV1 (revoked).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Server clock in preview is Mon 19 Oct 2026 ~08:00 WIB (shift active, Block 1). Admin Settings revoke uses window.confirm, so register a page.on('dialog') accept handler. History page has duplicated testids (cards and table): scope to tx-detail-dialog or use :visible. Product create needs Satuan filled until the bug is fixed."
+}
