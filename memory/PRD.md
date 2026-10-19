@@ -33,8 +33,12 @@ See original statement: RBAC on server, idempotency, aggregates from source tran
 - Migration 0000_init + base seed applied to Neon `neondb` (3 departments, Shift 1 v2024-01-01, settings, super admin). No demo data in Neon.
 - vercel.json (yarn install --frozen-lockfile, build = yarn db:migrate && yarn build, region sin1); `next build` verified OK; README deploy steps updated.
 
+## Implemented (2026-10-20) — Vercel deploy
+- Vercel project `rode` (scope nurhasan-fadillahs-projects, root = frontend via CLI link), 10 production env vars set, production deployment Ready (alias rode-mu-eight.vercel.app, protected by Vercel Authentication); build ran migrations on Neon OK; /api/time verified.
+- Domain rode.redone.my.id added & verified in project; waiting for Cloudflare DNS: CNAME rode → 376b13e7efdd762e.vercel-dns-017.com (DNS only / grey cloud).
+
 ## Backlog
-- P0: Create Vercel project (root `frontend`), set env vars, deploy; enter real lines/products/users/targets.
+- P0: User adds Cloudflare CNAME; connect GitHub repo to Vercel for auto-deploy; revoke one-day Vercel token; change admin password.
 - P1 (Phase 2): daily & range reports, productivity analysis, CSV/Excel/print/PDF export with filter info, special schedules (holidays/overtime).
 - P2 (Phase 3): multi-user/perf load tests, optional safe offline queue, Printing machine/shift dimensions, real company logo, shadcn date picker with Indonesian format.
 
