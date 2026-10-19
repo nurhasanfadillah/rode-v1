@@ -46,10 +46,20 @@ Secret hanya ada di server. Tidak ada variabel `NEXT_PUBLIC_*` yang memuat krede
 
 ## Deploy Vercel
 
-1. Import repo, **Root Directory = `frontend`**, framework Next.js, install `yarn install`, build `yarn build`.
-2. Isi env per environment (lihat tabel). `AUTO_MIGRATE=false`.
-3. Jalankan `yarn db:migrate` ke branch Neon yang sesuai **sebelum** promote deployment (bisa via GitHub Action).
-4. Verifikasi: login admin, buat produk/line/user nyata, input uji, cek dashboard & link Smart TV.
+`vercel.json` sudah disiapkan: install `yarn install --frozen-lockfile`, build `yarn db:migrate && yarn build` (migrasi otomatis memakai `DATABASE_URL_UNPOOLED` setiap deploy; aman diulang), region `sin1` (Singapura, dekat Neon `ap-southeast-1`).
+
+1. Push repo ke GitHub → Vercel **Add New Project** → import repo → **Root Directory = `frontend`** (framework Next.js terdeteksi otomatis).
+2. Settings → Environment Variables, isi untuk **Production** (dan Preview bila memakai branch Neon terpisah):
+   - `APP_ENV=production`
+   - `DATABASE_URL` = Neon pooled (`...-pooler...`)
+   - `DATABASE_URL_UNPOOLED` = Neon direct (host tanpa `-pooler`)
+   - `AUTO_MIGRATE=false`, `DEMO_SEED=false`
+   - `ADMIN_USERNAME`, `ADMIN_PASSWORD` (password kuat; dipakai jika belum ada super admin)
+   - `SESSION_HOURS=12`, `DB_POOL_MAX=5`
+3. Deploy. Base data (departemen, shift default, pengaturan, super admin) cukup dibuat sekali: `yarn db:seed` dari lokal dengan env production (sudah dijalankan untuk database `neondb` saat ini).
+4. Verifikasi: login admin → buat produk, line, user nyata → input uji → cek dashboard & link Smart TV.
+
+Alternatif CLI: `cd frontend && npx vercel@latest link && npx vercel@latest env add ... && npx vercel@latest --prod`.
 
 > Catatan preview Emergent: di lingkungan pratinjau, ingress meneruskan `/api/*` ke port 8001; `backend/server.py` hanya proxy tipis ke Next.js (port 3000). Tidak dipakai di Vercel.
 

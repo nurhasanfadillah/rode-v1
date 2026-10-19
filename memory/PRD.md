@@ -28,8 +28,13 @@ See original statement: RBAC on server, idempotency, aggregates from source tran
 - Tests: 25 vitest (blocks, idempotency, authz, aggregation, corrections, config history) pass; backend API pytest 36/36 after fix; frontend E2E iteration_1 passed (product unit bug fixed).
 - Docs: frontend/README.md, docs/ARCHITECTURE.md, docs/GUIDE.md.
 
+## Implemented (2026-10-20) — NeonDB connection
+- frontend/.env now uses company Neon (pooled DATABASE_URL + direct DATABASE_URL_UNPOOLED derived by removing "-pooler"), APP_ENV=production, DEMO_SEED=false, AUTO_MIGRATE=false.
+- Migration 0000_init + base seed applied to Neon `neondb` (3 departments, Shift 1 v2024-01-01, settings, super admin). No demo data in Neon.
+- vercel.json (yarn install --frozen-lockfile, build = yarn db:migrate && yarn build, region sin1); `next build` verified OK; README deploy steps updated.
+
 ## Backlog
-- P0: Connect customer NeonDB (pooled + direct strings) & deploy to Vercel; verify production.
+- P0: Create Vercel project (root `frontend`), set env vars, deploy; enter real lines/products/users/targets.
 - P1 (Phase 2): daily & range reports, productivity analysis, CSV/Excel/print/PDF export with filter info, special schedules (holidays/overtime).
 - P2 (Phase 3): multi-user/perf load tests, optional safe offline queue, Printing machine/shift dimensions, real company logo, shadcn date picker with Indonesian format.
 
