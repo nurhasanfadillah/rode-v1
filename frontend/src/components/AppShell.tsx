@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  BarChart3, CalendarClock, ClipboardList, Factory, History, LogOut, Menu, MonitorPlay, PlusSquare, ScrollText, Settings, Target, User, X, WifiOff,
+  BarChart3, CalendarClock, ClipboardList, Factory, FileBarChart, History, LogOut, Menu, MonitorPlay, PlusSquare, ScrollText, Settings, Target, User, X, WifiOff,
 } from "lucide-react";
 import { api, useOnline } from "@/lib/client";
 import { ROLE_LABEL } from "@/lib/format";
@@ -15,6 +15,7 @@ const ITEMS: Item[] = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3, roles: ["manager", "super_admin"] },
   { href: "/input", label: "Input", icon: PlusSquare, roles: ["operator", "super_admin"] },
   { href: "/history", label: "Riwayat", icon: History, roles: ["operator", "manager", "super_admin"] },
+  { href: "/reports", label: "Laporan", icon: FileBarChart, roles: ["manager", "super_admin"] },
   { href: "/admin/master", label: "Master Data", icon: Factory, roles: ["super_admin"] },
   { href: "/admin/schedule", label: "Jadwal & Blok", icon: CalendarClock, roles: ["super_admin"] },
   { href: "/admin/targets", label: "Target", icon: Target, roles: ["super_admin"] },
@@ -49,7 +50,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
   const active = (h: string) => path === h || path.startsWith(`${h}/`);
   return (
     <div className="min-h-screen lg:flex">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-navy p-5 text-white lg:flex" data-testid="sidebar">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-navy p-5 text-white lg:flex print:!hidden" data-testid="sidebar">
         <Logo dark />
         <nav className="mt-8 flex flex-1 flex-col gap-1">
           {items.map((i) => (
@@ -69,7 +70,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-white/90 px-4 py-3 backdrop-blur lg:hidden print:hidden">
           <Logo />
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-navy-50 px-2.5 py-1 text-[11px] font-semibold text-navy" data-testid="header-role-badge">{ROLE_LABEL[user.role]}</span>
@@ -83,8 +84,8 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
             <WifiOff className="h-4 w-4" /> Perangkat offline. Data TIDAK tersimpan ke server sampai koneksi pulih.
           </div>
         )}
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-10">{children}</main>
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid border-t bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" style={{ gridTemplateColumns: `repeat(${bottom.length}, 1fr)` }} data-testid="bottom-nav">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-10 print:max-w-none print:p-0">{children}</main>
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid border-t bg-white pb-[env(safe-area-inset-bottom)] lg:hidden print:hidden" style={{ gridTemplateColumns: `repeat(${bottom.length}, 1fr)` }} data-testid="bottom-nav">
           {bottom.map((i) => (
             <Link key={i.href} href={i.href} data-testid={`bottom-nav-${i.label.toLowerCase().split(" ")[0]}`}
               className={cn("flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold", active(i.href) ? "text-navy" : "text-slate-500")}>

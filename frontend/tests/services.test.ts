@@ -157,3 +157,22 @@ describe("configuration history (acceptance #10)", () => {
     expect((await lineTotal()).blocks.map((b) => [b.no, b.start, b.qty])).toEqual(before);
   });
 });
+
+describe("reports & export", () => {
+  it("report totals match dashboard aggregation and exports are sanitised", async () => {
+    const { buildReport, toCsv, toXlsx, safeCell } = await import("@/services/report");
+    const r = await buildReport({ date: DAY }, at(15, 0));
+    const d = await getDashboard({ date: DAY }, at(15, 0));
+    const deptRows = r.sections.find((s) => s.key === "departments")!.rows;
+    expect(deptRows.map((x) => x[1])).toEqual(d.departments.map((x) => x.actual));
+    expect(r.sections.some((s) => s.key === "blocks")).toBe(true);
+    expect(r.meta.find(([k]) => k === "Dibuat pada")?.[1]).toMatch(/WIB$/);
+    expect(safeCell("=HYPERLINK(1)")).toBe("'=HYPERLINK(1)");
+    const csv = toCsv(r);
+    expect(csv.startsWith("\uFEFF")).toBe(true);
+    expect(csv).toContain("Total per departemen");
+    expect((await toXlsx(r)).length).toBeGreaterThan(1000);
+    const range = await buildReport({ from: addDays(DAY, -2), to: DAY }, at(15, 0));
+    expect(range.sections.find((s) => s.key === "daily")!.rows).toHaveLength(3);
+  });
+});

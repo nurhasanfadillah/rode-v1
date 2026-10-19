@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@electric-sql/pglite"],
+  serverExternalPackages: ["@electric-sql/pglite", "exceljs"],
   allowedDevOrigins: ["*.preview.emergentagent.com", "*.preview.emergentcf.cloud", "*.cluster-11.preview.emergentcf.cloud", "redone-rode.cluster-11.preview.emergentcf.cloud"],
   poweredByHeader: false,
   distDir: process.env.NEXT_DIST_DIR || ".next",
