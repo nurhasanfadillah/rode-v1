@@ -91,7 +91,7 @@ export function DisplayBoard({ token }: { token: string }) {
           <aside className="flex min-h-0 flex-col gap-4 overflow-hidden">
             {showPP && <PrintPackCard d={data} />}
             {showChart && (
-              <div className="flex min-h-[120px] flex-1 flex-col rounded-2xl border border-tv-line bg-tv-card p-3" data-testid="display-block-chart">
+              <div className="flex min-h-[170px] flex-1 flex-col rounded-2xl border border-tv-line bg-tv-card p-3" data-testid="display-block-chart">
                 <div className="mb-1 text-sm font-bold uppercase tracking-widest text-slate-400">Sewing per blok</div>
                 <div className="min-h-0 flex-1"><BlockChart data={data.blockSeries} lines={data.lines.map((l) => l.code)} dark /></div>
               </div>
@@ -140,7 +140,7 @@ function Stat({ label, value, sub, big, accent, testId }: { label: string; value
   return (
     <div className="min-w-0">
       <div className="truncate text-xs uppercase tracking-wide text-slate-400">{label}</div>
-      <div className={cn("num truncate font-black leading-tight", big ? "text-3xl 2xl:text-4xl" : "text-2xl 2xl:text-3xl", accent && "text-teal")} data-testid={testId}>{value}</div>
+      <div className={cn("num truncate font-black leading-tight", big ? "text-2xl xl:text-3xl 2xl:text-4xl" : "text-xl xl:text-2xl 2xl:text-3xl", accent && "text-teal")} data-testid={testId}>{value}</div>
       {sub && <div className="num truncate text-xs text-slate-500">{sub}</div>}
     </div>
   );

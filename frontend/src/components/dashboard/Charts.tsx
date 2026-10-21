@@ -10,7 +10,7 @@ const tip = { formatter: (v: unknown) => fmtNum(Number(v)), contentStyle: { bord
 const grid = <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />;
 
 function Wrap({ children, testId, dark }: { children: React.ReactElement; testId: string; dark?: boolean }) {
-  return <div className={dark ? "h-full min-h-[180px] w-full" : "h-64 w-full"} data-testid={testId}><ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer></div>;
+  return <div className={dark ? "h-full w-full" : "h-64 w-full"} data-testid={testId}><ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer></div>;
 }
 
 export function BlockChart({ data, lines, dark }: { data: Record<string, string | number>[]; lines: string[]; dark?: boolean }) {

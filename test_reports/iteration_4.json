@@ -1,0 +1,39 @@
+{
+  "summary": "Frontend-only retest of the iteration_3 issues on the Smart TV board at 1920x1080, 1366x768 and 1280x720, using DOM measurements, simulated values (DOM edit only) and screenshots. FIXED: the outer layout. At all 3 sizes the chart's outer box stays inside <main> (bottom 990/678/630 vs footer top 1006/694/646), sits below the single Printing & Packing card, and the page does not scroll. FIXED: 3-digit block qty (999/128) is no longer clipped. STILL BROKEN / NEW: (1) at 1366 and 1280 the chart box is only 125/120px tall, but its inner Recharts wrapper has min-h-[180px]. The plot overflows and gets clipped: the x-axis (B1..B10) and legend are not visible, only the y labels 4,3,2 show. (2) The 'target 45' line in the block cells is truncated to 'target…' at 1280 (54px text in a 45px box), even with real data. At 1366 it is truncated with real data too (54 vs 50). (3) A simulated 5-digit total '12.345' is still clipped as '12.3…' at 1280 (108 vs 104); it fits at 1366. 1920x1080: no overlaps, no clipping.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "BlockChart inside display-block-chart (Charts.tsx line 13: Wrap dark => 'h-full min-h-[180px]')", "issue": "At 1366x768 the chart card is 125px with a 75px inner area, and the ResponsiveContainer is 180px. At 1280x720 the card is 120px with a 70px inner area, and the container is 180px. The aside has overflow-hidden, so the bottom of the chart (x-axis and legend at y=747-765, below the card bottom at 678) is clipped. The chart is unreadable on these TVs.", "selector": "[data-testid='chart-blocks']", "priority": "HIGH"},
+      {"component": "BlockGrid compact cell 'target N' line", "issue": "'target 45' is truncated to 'target…' at 1366 (54px text in 50px) and at 1280 (54px in 45px), with real data. Fine at 1920.", "selector": "[data-testid^='display-grid-'][data-state] .num:nth-child(3)", "priority": "MEDIUM"},
+      {"component": "SewingPanel Stat 'Total hari ini'", "issue": "Simulated '12.345' at text-3xl is clipped to '12.3…' at 1280 (scrollWidth 108 vs clientWidth 104). It fits at 1366 and 1920.", "selector": "[data-testid^='display-line-total-']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "TV board at 1280x720", "issues": ["The print-pack product table body ('Belum ada hasil hari ini' / product rows) is fully clipped. Only the table header row is visible."]},
+      {"screen": "TV board at 1366/1280", "issues": ["The Sewing panel has 80-100px of empty space under the line cards while the right column is cramped. Consider giving the chart more height (for example use grid rows or make the PrintPack card more compact)."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Charts.tsx Wrap: on the TV (dark) use 'h-full min-h-0' (or min-h-[60px]) instead of min-h-[180px] so the chart scales to the 70-75px it gets. Alternatively, hide the legend or reduce the PrintPack card height (hide the product table below 2xl/short heights) so the chart gets about 150px or more.",
+    "BlockGrid compact: shorten 'target 45' to 't45' or '/45', or use text-[9px] / no letter-spacing below 2xl, so it fits in 45-50px cells.",
+    "Stat big value: use text-2xl below xl (1280), or use clamp(), so 5-digit totals fit at 1280."
+  ],
+  "critical_code_review_comments": [
+    "Charts.tsx min-h-[180px] on the dark Wrap conflicts with the new chart card min-h-[120px] flex-1. The child's min-height is larger than its parent's, and the overflow is hidden by the aside.",
+    "Everything uses truncate. Use a smaller font or responsive text instead, so numbers are not silently cut off on a production TV."
+  ],
+  "passed_checks": [
+    "Exactly 1 display-panel-print-pack containing display-panel-printing and display-panel-packing (all 3 viewports)",
+    "display-block-chart outer box: top is below the print-pack bottom, bottom <= main bottom, and it does not overlap the footer / display-last-update (all 3 viewports)",
+    "No page scroll (scrollHeight == innerHeight) at all 3 viewports",
+    "Block cells with qty 999/128: no clipping at 1366 or 1280",
+    "1920x1080: no clipped or overlapping elements even with simulated values"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "70%"},
+  "seed_data_creation": "None. Large values were only simulated by editing the DOM.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "TV token rdtv__pu0tBvP5wFGxb4lrnAS6DJi9BhsHcWh. There are 2 lines with 10 blocks each, and data is zero. Measure the [data-testid='display-block-chart'] rect against .recharts-legend-wrapper / .recharts-responsive-container height at 1366x768 and 1280x720. Check scrollWidth vs clientWidth on the block cell 'target' div and on display-line-total-* after injecting '12.345'."
+}
