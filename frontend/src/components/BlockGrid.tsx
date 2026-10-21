@@ -22,8 +22,9 @@ export function BlockGrid({ blocks, breaks = [], tv = false, compact = false, co
                 <span>B{b.no}</span><Icon className="h-3 w-3" aria-label={m.label} />
               </div>
               <div className={cn("num truncate font-extrabold leading-tight", compact ? "text-base" : "text-xl")}>
-                {b.qty}{b.target != null && <span className="text-[11px] font-semibold opacity-75">/{b.target}</span>}
+                {b.qty}{b.target != null && !compact && <span className="text-[11px] font-semibold opacity-75">/{b.target}</span>}
               </div>
+              {compact && b.target != null && <div className="num truncate text-[10px] font-semibold leading-none opacity-75">target {b.target}</div>}
               {!compact && <div className="num text-[10px] opacity-80">{b.start}–{b.end}</div>}
               {!compact && <div className="sr-only">{m.label}</div>}
             </div>

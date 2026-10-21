@@ -1,0 +1,34 @@
+{
+  "summary": "Frontend-only layout check of the Smart TV board (/display/production) at 1920x1080, 1366x768 and 1280x720, using DOM measurements and screenshots. At 1920x1080 everything passes. At 1366x768 and 1280x720 the chart in the right column spills out of <main> and covers the footer. In a client-side test (DOM edit, no data changed), realistic numbers like a 5-digit total or a 3-digit block qty got cut off with an ellipsis in the Sewing cards at 1366 and 1280 widths.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "DisplayBoard aside / display-block-chart", "issue": "At 1366x768 the main area spans y=278-678 but the chart's bottom is at 780. At 1280x720 main spans 278-630 and the chart's bottom is 780. The chart sits on top of the footer (display-last-update / 'Line berproduksi') and runs off the screen. Cause: the PrintPack card is shrink-0 (264px), plus a 16px gap, plus the chart's min-h-[220px] = 500px, which is more than main's height (400 or 352px). The aside has min-h-0 but no overflow clipping, so the content overflows visibly.", "selector": "[data-testid='display-block-chart']", "priority": "HIGH"},
+      {"component": "SewingPanel Stat (Total hari ini)", "issue": "Simulated total '12.345' with text-4xl: scrollWidth 132 vs clientWidth 113 at 1366 and 104 at 1280. It shows as '12.…' (clipped). Fine at 1920.", "selector": "[data-testid^='display-line-total-']", "priority": "MEDIUM"},
+      {"component": "BlockGrid tv compact cell", "issue": "Simulated qty 128/45: text is 51px wide in a 50px box at 1366 and 45px at 1280. Shows as '128…' and the target is hidden. Fine at 1920.", "selector": "[data-testid^='display-grid-'][data-state] .num", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [{"screen": "TV board at 1920x1080", "issues": ["With only 2 lines, the Sewing panel leaves about 400px of empty space under the cards. Acceptable, but the cards could stretch or the grid cells could be bigger."]}]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Make the right column fit inside main at smaller heights. Options: make the chart flex-1 min-h-0 (drop min-h-[220px] or use something like min-h-[120px]); and/or add overflow-hidden to the aside; and/or let the PrintPack card shrink and hide the product table on short screens (or use max-h with a scroll). Recheck at 1366x768 and 1280x720 that chart bottom <= main bottom < footer top.",
+    "Stop big numbers from truncating at 1280-1366 widths: use a smaller font for Stat values (for example text-3xl on narrow screens, or clamp()), or use fewer KPI columns. For block cells, use text-sm or drop the '/target' part when there isn't room, or use 4 columns."
+  ],
+  "critical_code_review_comments": [
+    "DisplayBoard.tsx line 94: min-h-[220px] on the chart, together with the shrink-0 PrintPackCard (line 157), causes the overflow on short viewports.",
+    "Stat values use truncate, so overflow is hidden with an ellipsis instead of the text resizing. Numbers that get cut off are misleading on a production TV."
+  ],
+  "passed_checks": [
+    "Exactly 1 display-panel-print-pack, and it contains display-panel-printing, display-panel-packing and display-print-pack-products (all 3 viewports)",
+    "display-block-chart top (560) is below the print-pack bottom (544), in the same x-range (all viewports)",
+    "Sewing line cards SEW-L1 and SEW-L2: bottom 594 is within the panel bottom; no clipped text with the current (zero) data; 20 block cells render",
+    "Header clock, 'TERHUBUNG', KPI row and footer are all visible with no overlap at 1920x1080; the page itself does not scroll"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "70%"},
+  "seed_data_creation": "None. Large values were only simulated by editing the DOM in the browser.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "TV token rdtv__pu0tBvP5wFGxb4lrnAS6DJi9BhsHcWh. There are 2 lines (SEW-L1, SEW-L2) with 10 blocks each, and today's data is zero. Measure main/aside/chart/footer rects at 1366x768 and 1280x720, and inject large numbers to check text truncation."
+}

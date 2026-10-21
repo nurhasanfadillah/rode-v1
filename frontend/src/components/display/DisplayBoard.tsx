@@ -88,10 +88,10 @@ export function DisplayBoard({ token }: { token: string }) {
       <main className="grid min-h-0 flex-1 gap-4" style={{ gridTemplateColumns: showSewing && (showPP || showChart) ? "1.6fr 1fr" : "1fr" }}>
         {showSewing && <SewingPanel d={data} single={mode === "line"} />}
         {(showPP || showChart) && (
-          <aside className="flex min-h-0 flex-col gap-4">
+          <aside className="flex min-h-0 flex-col gap-4 overflow-hidden">
             {showPP && <PrintPackCard d={data} />}
             {showChart && (
-              <div className="flex min-h-[220px] flex-1 flex-col rounded-2xl border border-tv-line bg-tv-card p-3" data-testid="display-block-chart">
+              <div className="flex min-h-[120px] flex-1 flex-col rounded-2xl border border-tv-line bg-tv-card p-3" data-testid="display-block-chart">
                 <div className="mb-1 text-sm font-bold uppercase tracking-widest text-slate-400">Sewing per blok</div>
                 <div className="min-h-0 flex-1"><BlockChart data={data.blockSeries} lines={data.lines.map((l) => l.code)} dark /></div>
               </div>
@@ -140,7 +140,7 @@ function Stat({ label, value, sub, big, accent, testId }: { label: string; value
   return (
     <div className="min-w-0">
       <div className="truncate text-xs uppercase tracking-wide text-slate-400">{label}</div>
-      <div className={cn("num truncate font-black leading-tight", big ? "text-4xl" : "text-3xl", accent && "text-teal")} data-testid={testId}>{value}</div>
+      <div className={cn("num truncate font-black leading-tight", big ? "text-3xl 2xl:text-4xl" : "text-2xl 2xl:text-3xl", accent && "text-teal")} data-testid={testId}>{value}</div>
       {sub && <div className="num truncate text-xs text-slate-500">{sub}</div>}
     </div>
   );
@@ -154,18 +154,19 @@ function PrintPackCard({ d }: { d: Board }) {
     .sort((a, b) => b.per.reduce((s, q) => s + q, 0) - a.per.reduce((s, q) => s + q, 0))
     .slice(0, 6);
   return (
-    <div className="flex min-h-0 shrink-0 flex-col gap-3 overflow-hidden rounded-2xl border border-tv-line bg-tv-card p-4" data-testid="display-panel-print-pack">
+    <div className="flex min-h-0 shrink flex-col gap-3 overflow-hidden rounded-2xl border border-tv-line bg-tv-card p-4" data-testid="display-panel-print-pack">
       <div className="font-display text-2xl font-bold">{depts.map((x) => x.name).join(" & ") || "Non-blok"}</div>
       <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.max(1, depts.length)}, minmax(0,1fr))` }}>
         {depts.map((dp) => (
           <div key={dp.id} className="min-w-0 rounded-xl bg-tv-bg/60 p-3" data-testid={`display-panel-${dp.code.toLowerCase()}`}>
             <div className="truncate text-xs font-bold uppercase tracking-widest text-slate-400">{dp.name}</div>
-            <div className="num truncate text-4xl font-black leading-tight">{fmtNum(dp.actual)}</div>
+            <div className="num truncate text-3xl font-black leading-tight 2xl:text-4xl">{fmtNum(dp.actual)}</div>
             <div className="num mb-1.5 truncate text-xs text-slate-400">target {fmtNum(dp.target)} · <b className="text-white">{fmtPct(dp.pct)}</b></div>
             <Progress value={dp.pct} tv />
           </div>
         ))}
       </div>
+      <div className="min-h-0 overflow-hidden">
       <table className="w-full table-fixed text-base" data-testid="display-print-pack-products">
         <thead><tr className="text-left text-xs uppercase tracking-wide text-slate-400"><th className="w-1/2 pb-1">Produk</th>{depts.map((x) => <th key={x.id} className="pb-1 text-right">{x.name}</th>)}</tr></thead>
         <tbody>
@@ -174,6 +175,7 @@ function PrintPackCard({ d }: { d: Board }) {
           )) : <tr><td colSpan={depts.length + 1} className="py-2 text-slate-500">Belum ada hasil hari ini</td></tr>}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
