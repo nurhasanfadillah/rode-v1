@@ -1,0 +1,34 @@
+{
+  "summary": "Frontend-only retest of the iteration_4 issues on the Smart TV board at 1920x1080, 1366x768 and 1280x720, using DOM measurements, DOM-only simulated values and screenshots. FIXED: (1) The chart now fits inside its card at all 3 sizes. All 10 x-axis labels B1..B10 and the legend (SEW-L1/SEW-L2) are visible. Legend bottom vs card bottom: 972/990, 660/678, 612/630. The card bottom equals the main bottom and stays above the footer (1006/694/646). The chart sits below the single display-panel-print-pack card. The page does not scroll. (2) Block cells: '/45' and a simulated qty of 999 are not truncated at any size. (3) 1920x1080: no overlaps, no clipping. STILL FAILING: a simulated '12.345' in display-line-total-* is still clipped to '12.3…' at exactly 1280 (scrollWidth 108 vs clientWidth 104, font-size 30px). Tailwind's xl breakpoint is min-width:1280px, so the xl:text-3xl class applies at 1280 and text-2xl never takes effect there.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "DisplayBoard.tsx Stat (big) line 143", "issue": "At 1280x720 a simulated 5-digit total '12.345' is truncated to '12.3…' (108 > 104px, computed 30px). The fix 'text-2xl below xl' does not cover 1280 because xl = min-width 1280px. At 1366 it fits with zero margin (113/113).", "selector": "[data-testid^='display-line-total-']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "TV 1366x768 / 1280x720", "issues": ["The product table in the Printing & Packing card is hidden. At 1366 only the table header (Produk/Printing/Packing) is visible, cut off right at the card edge. At 1280 even the header is clipped (thead bottom 480 > card bottom 444). This is acceptable as a design choice, but it would be cleaner to hide the table below 2xl instead of leaving a half-visible header at 1366.", "There is about 80px of empty space under the Sewing line cards at 1366/1280 (cosmetic)."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Stat big value: use 'text-2xl 2xl:text-4xl' (drop xl:text-3xl), or use min-[1400px]:text-3xl, so 5-digit totals fit at 1280. Optionally apply the same to the 'target 45' sub, which is fine now.",
+    "Optional: hide the print-pack product table below 2xl (or on short screens) so it does not show a half-clipped header at 1366."
+  ],
+  "critical_code_review_comments": [
+    "Tailwind breakpoints are min-width, so a 1280px TV is 'xl'. Responsive font fixes aimed at 1280 have to target below 2xl or use a custom breakpoint."
+  ],
+  "passed_checks": [
+    "Chart x-axis B1..B10 and legend are inside display-block-chart at 1920/1366/1280",
+    "Chart card bottom <= main bottom, no overlap with the footer, positioned below the single print-pack card",
+    "Exactly 1 display-panel-print-pack card",
+    "Block cells: '/45' and a simulated qty of 999 are not truncated at 1366/1280",
+    "No page scroll at any size; 1920x1080 has no overlaps or clipping"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "90%"},
+  "seed_data_creation": "None. Values were simulated by editing the DOM only.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "TV token rdtv__pu0tBvP5wFGxb4lrnAS6DJi9BhsHcWh. There are 2 lines with 10 blocks each and all data is zero. Inject '12.345' into [data-testid^='display-line-total-'] at 1280x720 and compare scrollWidth vs clientWidth. Chart axis ticks are 'svg text' elements matching /^B\\d+$/."
+}

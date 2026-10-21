@@ -140,7 +140,7 @@ function Stat({ label, value, sub, big, accent, testId }: { label: string; value
   return (
     <div className="min-w-0">
       <div className="truncate text-xs uppercase tracking-wide text-slate-400">{label}</div>
-      <div className={cn("num truncate font-black leading-tight", big ? "text-2xl xl:text-3xl 2xl:text-4xl" : "text-xl xl:text-2xl 2xl:text-3xl", accent && "text-teal")} data-testid={testId}>{value}</div>
+      <div className={cn("num truncate font-black leading-tight", big ? "text-2xl 2xl:text-4xl" : "text-xl 2xl:text-3xl", accent && "text-teal")} data-testid={testId}>{value}</div>
       {sub && <div className="num truncate text-xs text-slate-500">{sub}</div>}
     </div>
   );
@@ -166,7 +166,7 @@ function PrintPackCard({ d }: { d: Board }) {
           </div>
         ))}
       </div>
-      <div className="min-h-0 overflow-hidden">
+      <div className="hidden min-h-0 overflow-hidden 2xl:block">
       <table className="w-full table-fixed text-base" data-testid="display-print-pack-products">
         <thead><tr className="text-left text-xs uppercase tracking-wide text-slate-400"><th className="w-1/2 pb-1">Produk</th>{depts.map((x) => <th key={x.id} className="pb-1 text-right">{x.name}</th>)}</tr></thead>
         <tbody>
