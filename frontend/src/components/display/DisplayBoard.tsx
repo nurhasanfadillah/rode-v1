@@ -16,6 +16,7 @@ type Board = {
   departments: Dept[]; metric: { name: string; actual: number; target: number | null; pct: number | null } | null; topProduct: { name: string; qty: number; departmentName: string } | null;
   schedule: { status: string; shiftName?: string; start?: string; end?: string; currentBlock?: number | null; breaks?: { start: string; end: string; label: string }[] };
   lines: Line[]; blockSeries: Record<string, string | number>[]; linesProducing: number; linesTotal: number;
+  products: { id: string; name: string; byDept: Record<string, number> }[];
 };
 const STATUS: Record<string, [string, string]> = {
   running: ["PRODUKSI BERJALAN", "bg-emerald-500"], break: ["ISTIRAHAT", "bg-indigo-500"], before: ["BELUM MULAI", "bg-slate-500"],
@@ -48,6 +49,7 @@ export function DisplayBoard({ token }: { token: string }) {
   const [stLabel, stColor] = STATUS[data.schedule.status] ?? STATUS.off;
   const showSewing = mode === "all" || mode === "sewing" || mode === "line" || (mode === "rotate" && panel === 0);
   const showPP = mode === "all" || mode === "print_pack" || (mode === "rotate" && panel === 1);
+  const showChart = showSewing && mode !== "line" && data.blockSeries.length > 0;
   const kpiDepts = mode === "sewing" || mode === "line" ? data.departments.filter((d) => d.kind === "line_block") : mode === "print_pack" ? data.departments.filter((d) => d.kind !== "line_block") : data.departments;
 
   return (
@@ -83,9 +85,19 @@ export function DisplayBoard({ token }: { token: string }) {
         </div>
       </div>
 
-      <main className="grid min-h-0 flex-1 gap-4" style={{ gridTemplateColumns: showSewing && showPP ? "1.7fr 1fr" : "1fr" }}>
+      <main className="grid min-h-0 flex-1 gap-4" style={{ gridTemplateColumns: showSewing && (showPP || showChart) ? "1.6fr 1fr" : "1fr" }}>
         {showSewing && <SewingPanel d={data} single={mode === "line"} />}
-        {showPP && <PrintPackPanel d={data} />}
+        {(showPP || showChart) && (
+          <aside className="flex min-h-0 flex-col gap-4">
+            {showPP && <PrintPackCard d={data} />}
+            {showChart && (
+              <div className="flex min-h-[220px] flex-1 flex-col rounded-2xl border border-tv-line bg-tv-card p-3" data-testid="display-block-chart">
+                <div className="mb-1 text-sm font-bold uppercase tracking-widest text-slate-400">Sewing per blok</div>
+                <div className="min-h-0 flex-1"><BlockChart data={data.blockSeries} lines={data.lines.map((l) => l.code)} dark /></div>
+              </div>
+            )}
+          </aside>
+        )}
       </main>
 
       <footer className="flex items-center justify-between rounded-xl border border-tv-line bg-tv-card px-5 py-3 text-sm">
@@ -98,49 +110,71 @@ export function DisplayBoard({ token }: { token: string }) {
 }
 
 function SewingPanel({ d, single }: { d: Board; single: boolean }) {
-  const cols = single ? 1 : d.lines.length <= 2 ? d.lines.length || 1 : d.lines.length <= 4 ? 2 : 3;
+  const n = d.lines.length;
+  const cols = single || n <= 1 ? 1 : n <= 4 ? 2 : 3;
   return (
-    <section className="flex min-h-0 flex-col gap-3">
-      <div className="grid min-h-0 flex-1 gap-3 overflow-hidden" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
+    <section className="min-h-0 overflow-y-auto [scrollbar-width:none]" data-testid="display-sewing-panel">
+      <div className="grid content-start gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
         {d.lines.map((l) => (
-          <div key={l.id} className="flex min-h-0 flex-col rounded-2xl border border-tv-line bg-tv-card p-4" data-testid={`display-line-${l.code}`}>
-            <div className="flex items-center justify-between"><div className="font-display text-2xl font-bold">{l.name}</div><ActivityBadge activity={l.activity} tv testId={`display-line-activity-${l.code}`} /></div>
-            <div className="truncate text-sm text-slate-400">Produk: <span className="text-slate-200">{l.currentProduct ?? "—"}</span></div>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              <div><div className="text-xs uppercase text-slate-400">Total</div><div className="num text-5xl font-black leading-none" data-testid={`display-line-total-${l.code}`}>{fmtNum(l.actual)}</div></div>
-              <div><div className="text-xs uppercase text-slate-400">Blok {l.lastBlock?.no ?? "–"}</div><div className="num text-4xl font-black leading-none">{fmtNum(l.lastBlock?.qty ?? 0)}<span className="text-base text-slate-500">/{fmtNum(l.blockTarget)}</span></div></div>
-              <div><div className="text-xs uppercase text-slate-400">Target {fmtNum(l.target)}</div><div className="num text-4xl font-black leading-none text-teal">{fmtPct(l.pct)}</div></div>
+          <div key={l.id} className="flex flex-col gap-2 rounded-2xl border border-tv-line bg-tv-card p-4" data-testid={`display-line-${l.code}`}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="truncate font-display text-2xl font-bold">{l.name}</div>
+              <ActivityBadge activity={l.activity} tv testId={`display-line-activity-${l.code}`} />
             </div>
-            <div className="my-2"><Progress value={l.pct} tv /></div>
-            <div className="min-h-0 overflow-hidden"><BlockGrid blocks={l.blocks} tv compact={!single} testId={`display-grid-${l.code}`} breaks={single ? d.schedule.breaks : []} /></div>
+            <div className="truncate text-sm text-slate-400">Produk: <span className="text-slate-200">{l.currentProduct ?? "—"}</span></div>
+            <div className="grid grid-cols-3 gap-3">
+              <Stat label="Total hari ini" value={fmtNum(l.actual)} testId={`display-line-total-${l.code}`} big />
+              <Stat label={`Blok ${l.lastBlock?.no ?? "–"}`} value={fmtNum(l.lastBlock?.qty ?? 0)} sub={`target ${fmtNum(l.blockTarget)}`} />
+              <Stat label={`Target ${fmtNum(l.target)}`} value={fmtPct(l.pct)} accent />
+            </div>
+            <Progress value={l.pct} tv />
+            <BlockGrid blocks={l.blocks} tv compact={!single} cols="grid-cols-5" legend={single} testId={`display-grid-${l.code}`} breaks={single ? d.schedule.breaks : []} />
           </div>
         ))}
       </div>
-      {!single && d.blockSeries.length > 0 && (
-        <div className="h-48 shrink-0 rounded-2xl border border-tv-line bg-tv-card p-3"><BlockChart data={d.blockSeries} lines={d.lines.map((l) => l.code)} dark /></div>
-      )}
     </section>
   );
 }
 
-function PrintPackPanel({ d }: { d: Board }) {
-  const depts = d.departments.filter((x) => x.kind !== "line_block");
+function Stat({ label, value, sub, big, accent, testId }: { label: string; value: string; sub?: string; big?: boolean; accent?: boolean; testId?: string }) {
   return (
-    <section className="flex min-h-0 flex-col gap-3">
-      {depts.map((dp) => {
-        const rows = (d as unknown as { products: { id: string; name: string; byDept: Record<string, number> }[] }).products
-          .map((p) => ({ name: p.name, qty: p.byDept[dp.id] ?? 0 })).filter((p) => p.qty > 0).sort((a, b) => b.qty - a.qty).slice(0, 5);
-        return (
-          <div key={dp.id} className="flex min-h-0 flex-1 flex-col rounded-2xl border border-tv-line bg-tv-card p-4" data-testid={`display-panel-${dp.code.toLowerCase()}`}>
-            <div className="flex items-end justify-between"><div className="font-display text-2xl font-bold">{dp.name}</div><div className="num text-4xl font-black">{fmtNum(dp.actual)}<span className="text-base text-slate-500"> / {fmtNum(dp.target)}</span></div></div>
-            <div className="my-2"><Progress value={dp.pct} tv /></div>
-            <ul className="space-y-1.5 overflow-hidden text-lg">
-              {rows.length ? rows.map((r) => <li key={r.name} className="flex justify-between border-b border-tv-line pb-1"><span className="truncate">{r.name}</span><b className="num">{fmtNum(r.qty)}</b></li>) : <li className="text-slate-500">Belum ada hasil hari ini</li>}
-            </ul>
+    <div className="min-w-0">
+      <div className="truncate text-xs uppercase tracking-wide text-slate-400">{label}</div>
+      <div className={cn("num truncate font-black leading-tight", big ? "text-4xl" : "text-3xl", accent && "text-teal")} data-testid={testId}>{value}</div>
+      {sub && <div className="num truncate text-xs text-slate-500">{sub}</div>}
+    </div>
+  );
+}
+
+function PrintPackCard({ d }: { d: Board }) {
+  const depts = d.departments.filter((x) => x.kind !== "line_block");
+  const rows = d.products
+    .map((p) => ({ name: p.name, per: depts.map((x) => p.byDept[x.id] ?? 0) }))
+    .filter((p) => p.per.some((q) => q > 0))
+    .sort((a, b) => b.per.reduce((s, q) => s + q, 0) - a.per.reduce((s, q) => s + q, 0))
+    .slice(0, 6);
+  return (
+    <div className="flex min-h-0 shrink-0 flex-col gap-3 overflow-hidden rounded-2xl border border-tv-line bg-tv-card p-4" data-testid="display-panel-print-pack">
+      <div className="font-display text-2xl font-bold">{depts.map((x) => x.name).join(" & ") || "Non-blok"}</div>
+      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.max(1, depts.length)}, minmax(0,1fr))` }}>
+        {depts.map((dp) => (
+          <div key={dp.id} className="min-w-0 rounded-xl bg-tv-bg/60 p-3" data-testid={`display-panel-${dp.code.toLowerCase()}`}>
+            <div className="truncate text-xs font-bold uppercase tracking-widest text-slate-400">{dp.name}</div>
+            <div className="num truncate text-4xl font-black leading-tight">{fmtNum(dp.actual)}</div>
+            <div className="num mb-1.5 truncate text-xs text-slate-400">target {fmtNum(dp.target)} · <b className="text-white">{fmtPct(dp.pct)}</b></div>
+            <Progress value={dp.pct} tv />
           </div>
-        );
-      })}
-    </section>
+        ))}
+      </div>
+      <table className="w-full table-fixed text-base" data-testid="display-print-pack-products">
+        <thead><tr className="text-left text-xs uppercase tracking-wide text-slate-400"><th className="w-1/2 pb-1">Produk</th>{depts.map((x) => <th key={x.id} className="pb-1 text-right">{x.name}</th>)}</tr></thead>
+        <tbody>
+          {rows.length ? rows.map((r) => (
+            <tr key={r.name} className="border-t border-tv-line"><td className="truncate py-1">{r.name}</td>{r.per.map((q, i) => <td key={i} className="num py-1 text-right font-bold">{fmtNum(q)}</td>)}</tr>
+          )) : <tr><td colSpan={depts.length + 1} className="py-2 text-slate-500">Belum ada hasil hari ini</td></tr>}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
