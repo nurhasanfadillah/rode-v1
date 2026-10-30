@@ -31,30 +31,21 @@ export function DashboardPage({ initialDate }: { initialDate: string }) {
   const sel = "h-10 rounded-lg border border-slate-300 bg-white px-2 text-sm";
 
   return (
-    <div className="relative">
+    <div>
       <PageHeader
         title="Dashboard Produksi"
         subtitle={data ? <span data-testid="dashboard-range">{data.filters.from === data.filters.to ? fmtDate(data.filters.to) : `${fmtDate(data.filters.from)} – ${fmtDate(data.filters.to)}`} · WIB</span> : "Memuat…"}
         actions={
+          <>
+          <button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy" onClick={() => setFiltersOpen((open) => !open)} aria-label={filtersOpen ? "Sembunyikan filter" : "Tampilkan filter"} title={filtersOpen ? "Sembunyikan filter" : "Tampilkan filter"} aria-expanded={filtersOpen} aria-controls={filtersOpen ? "dashboard-filters" : undefined} data-testid="dashboard-filter-toggle"><Filter className="h-4 w-4" /></button>
           <div className="flex items-center gap-2 rounded-full border bg-white px-3 py-1.5 text-xs text-slate-600" data-testid="dashboard-last-update">
             <span className={`h-2 w-2 rounded-full ${error ? "bg-red-500" : "bg-emerald-500"} ${isValidating ? "animate-pulse" : ""}`} />
             {error ? "Koneksi terganggu — mencoba ulang" : data ? <>Data server {fmtTime(data.serverTime)} · transaksi terakhir {data.lastUpdated ? fmtTime(data.lastUpdated) : "—"}</> : "…"}
             <button onClick={() => mutate()} aria-label="Muat ulang" data-testid="dashboard-refresh-button"><RefreshCw className="h-3.5 w-3.5" /></button>
           </div>
+          </>
         }
       />
-      <button
-        type="button"
-        className="absolute right-0 top-0 z-10 grid h-11 w-11 place-items-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
-        onClick={() => setFiltersOpen((open) => !open)}
-        aria-label={filtersOpen ? "Sembunyikan filter" : "Tampilkan filter"}
-        title={filtersOpen ? "Sembunyikan filter" : "Tampilkan filter"}
-        aria-expanded={filtersOpen}
-        aria-controls={filtersOpen ? "dashboard-filters" : undefined}
-        data-testid="dashboard-filter-toggle"
-      >
-        <Filter className="h-4 w-4" />
-      </button>
       {filtersOpen && <div id="dashboard-filters" className="card-surface mb-5 grid grid-cols-2 gap-2 p-3 sm:grid-cols-4 lg:grid-cols-7" data-testid="dashboard-filters">
         <input type="date" className={sel} value={f.from ?? ""} onChange={(e) => set("from", e.target.value)} data-testid="dash-filter-from" aria-label="Dari" />
         <input type="date" className={sel} value={f.to ?? ""} onChange={(e) => set("to", e.target.value)} data-testid="dash-filter-to" aria-label="Sampai" />
