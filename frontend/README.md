@@ -15,7 +15,7 @@ src/db/             schema Drizzle + koneksi (Neon/pg pool atau PGlite lokal) + 
 drizzle/            file migrasi SQL (dilacak git)
 scripts/            migrate, seed, purge-demo
 tests/              vitest: blok waktu, idempotensi, otorisasi, agregasi, koreksi
-docs/               ARCHITECTURE.md (DB, role, aturan blok) · GUIDE.md (panduan & keterbatasan)
+docs/               ARCHITECTURE.md (DB, role, aturan blok) · GUIDE.md (panduan & keterbatasan) · AUDIT-2026-10-30.md (hasil audit modul)
 ```
 
 ## Environment

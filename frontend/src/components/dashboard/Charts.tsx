@@ -17,7 +17,7 @@ export function BlockChart({ data, lines, dark }: { data: Record<string, string 
   const ax = dark ? "#94A3B8" : "#64748B";
   return (
     <Wrap testId="chart-blocks" dark={dark}>
-      <BarChart data={data}>
+      <BarChart data={data} title="Produksi per blok dan line">
         <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#1E293B" : "#E2E8F0"} vertical={false} />
         <XAxis dataKey="block" stroke={ax} tickLine={false} /><YAxis stroke={ax} tickLine={false} width={36} />
         <Tooltip {...tip} labelFormatter={(l, p) => `${l} · ${p?.[0]?.payload?.time ?? ""}`} />
@@ -31,7 +31,7 @@ export function BlockChart({ data, lines, dark }: { data: Record<string, string 
 export function HourlyChart({ data, depts }: { data: Record<string, string | number>[]; depts: { code: string; name: string }[] }) {
   return (
     <Wrap testId="chart-hourly">
-      <BarChart data={data}>{grid}<XAxis dataKey="hour" tickLine={false} /><YAxis tickLine={false} width={40} /><Tooltip {...tip} /><Legend wrapperStyle={{ fontSize: 12 }} />
+      <BarChart data={data} title="Produksi per jam dan departemen">{grid}<XAxis dataKey="hour" tickLine={false} /><YAxis tickLine={false} width={40} /><Tooltip {...tip} /><Legend wrapperStyle={{ fontSize: 12 }} />
         {depts.map((d) => <Bar key={d.code} dataKey={d.code} name={d.name} fill={DEPT[d.code] ?? "#6366F1"} radius={[3, 3, 0, 0]} />)}
       </BarChart>
     </Wrap>
@@ -41,7 +41,7 @@ export function HourlyChart({ data, depts }: { data: Record<string, string | num
 export function DeptChart({ data }: { data: { name: string; actual: number; target: number | null }[] }) {
   return (
     <Wrap testId="chart-departments">
-      <BarChart data={data.map((d) => ({ ...d, target: d.target ?? 0 }))}>{grid}<XAxis dataKey="name" tickLine={false} /><YAxis tickLine={false} width={44} /><Tooltip {...tip} /><Legend wrapperStyle={{ fontSize: 12 }} />
+      <BarChart data={data} title="Target dan aktual per departemen">{grid}<XAxis dataKey="name" tickLine={false} /><YAxis tickLine={false} width={44} /><Tooltip {...tip} /><Legend wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="target" name="Target" fill="#CBD5E1" radius={[3, 3, 0, 0]} />
         <Bar dataKey="actual" name="Aktual" fill="#0A2463" radius={[3, 3, 0, 0]} />
       </BarChart>
@@ -52,7 +52,7 @@ export function DeptChart({ data }: { data: { name: string; actual: number; targ
 export function LineChart({ data }: { data: { name: string; actual: number; target: number | null }[] }) {
   return (
     <Wrap testId="chart-lines">
-      <BarChart data={data.map((d) => ({ ...d, target: d.target ?? 0 }))} layout="vertical">{grid}<XAxis type="number" tickLine={false} /><YAxis type="category" dataKey="name" width={64} tickLine={false} /><Tooltip {...tip} /><Legend wrapperStyle={{ fontSize: 12 }} />
+      <BarChart data={data} layout="vertical" title="Target dan aktual per line">{grid}<XAxis type="number" tickLine={false} /><YAxis type="category" dataKey="name" width={64} tickLine={false} /><Tooltip {...tip} /><Legend wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="target" name="Target" fill="#CBD5E1" radius={[0, 3, 3, 0]} />
         <Bar dataKey="actual" name="Aktual" fill="#3CAEA3" radius={[0, 3, 3, 0]} />
       </BarChart>
@@ -63,7 +63,7 @@ export function LineChart({ data }: { data: { name: string; actual: number; targ
 export function DailyTrend({ data, depts }: { data: Record<string, string | number>[]; depts: { code: string; name: string }[] }) {
   return (
     <Wrap testId="chart-daily">
-      <RLineChart data={data}>{grid}<XAxis dataKey="date" tickFormatter={(d) => fmtDate(d, { day: "2-digit", month: "short" })} tickLine={false} /><YAxis tickLine={false} width={44} />
+      <RLineChart data={data} title="Tren produksi harian per departemen">{grid}<XAxis dataKey="date" tickFormatter={(d) => fmtDate(d, { day: "2-digit", month: "short" })} tickLine={false} /><YAxis tickLine={false} width={44} />
         <Tooltip {...tip} labelFormatter={(d) => fmtDate(String(d))} /><Legend wrapperStyle={{ fontSize: 12 }} />
         {depts.map((d) => <Line key={d.code} dataKey={d.code} name={d.name} stroke={DEPT[d.code] ?? "#6366F1"} strokeWidth={2.5} dot={{ r: 3 }} />)}
       </RLineChart>

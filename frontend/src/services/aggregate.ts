@@ -12,11 +12,32 @@ import { configsFor, loadSchedule } from "./schedule";
 import { getSettings } from "./settings";
 import { loadTargetsUpTo, targetsOn } from "./targets";
 
-const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => {
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}, "Tanggal tidak valid.");
 export const dashFilterSchema = z.object({
   from: dateStr.optional(), to: dateStr.optional(), date: dateStr.optional(),
   departmentId: z.string().uuid().optional(), lineId: z.string().uuid().optional(), shiftId: z.string().uuid().optional(),
   productId: z.string().uuid().optional(), operatorId: z.string().uuid().optional(),
+});
+export const reportFilterSchema = dashFilterSchema.superRefine((f, ctx) => {
+  if (f.date && (f.from || f.to)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Gunakan tanggal tunggal atau rentang tanggal, bukan keduanya." });
+  }
+  if ((f.from && !f.to) || (!f.from && f.to)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tanggal awal dan akhir harus diisi bersama." });
+  }
+  if (f.from && f.to && f.from > f.to) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tanggal awal harus sebelum tanggal akhir." });
+  }
+  const today = todayJakarta();
+  if ((f.from && f.from > today) || (f.to && f.to > today) || (f.date && f.date > today)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tanggal laporan tidak boleh di masa depan." });
+  }
+  if (f.from && f.to && daysBetween(f.from, f.to) > 92) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Rentang tanggal maksimal 93 hari." });
+  }
 });
 export type DashFilters = z.infer<typeof dashFilterSchema>;
 
@@ -32,15 +53,17 @@ export async function getDashboard(input: DashFilters, now = new Date()) {
   if (from > to) throw new ApiError(400, "Tanggal awal harus sebelum tanggal akhir.");
   if (daysBetween(from, to) > 92) throw new ApiError(400, "Rentang tanggal maksimal 93 hari.");
   const singleDay = from === to;
-  const [settings, schedule, targetRows] = [await getSettings(), await loadSchedule(), await loadTargetsUpTo(to)];
+  const [settings, schedule, targetRows] = await Promise.all([getSettings(), loadSchedule(), loadTargetsUpTo(to)]);
 
-  const depts = await db.select().from(departments)
-    .where(and(eq(departments.isActive, true), input.departmentId ? eq(departments.id, input.departmentId) : undefined))
-    .orderBy(asc(departments.sortOrder));
-  const lineRows = await db.select().from(productionLines)
-    .where(and(eq(productionLines.isActive, true), input.lineId ? eq(productionLines.id, input.lineId) : undefined,
-      input.departmentId ? eq(productionLines.departmentId, input.departmentId) : undefined))
-    .orderBy(asc(productionLines.sortOrder), asc(productionLines.code));
+  const [depts, lineRows] = await Promise.all([
+    db.select().from(departments)
+      .where(and(eq(departments.isActive, true), input.departmentId ? eq(departments.id, input.departmentId) : undefined))
+      .orderBy(asc(departments.sortOrder)),
+    db.select().from(productionLines)
+      .where(and(eq(productionLines.isActive, true), input.lineId ? eq(productionLines.id, input.lineId) : undefined,
+        input.departmentId ? eq(productionLines.departmentId, input.departmentId) : undefined))
+      .orderBy(asc(productionLines.sortOrder), asc(productionLines.code)),
+  ]);
 
   const where = and(...([
     gte(T.workDate, from), lte(T.workDate, to), ne(T.status, "cancelled"),
@@ -49,19 +72,21 @@ export async function getDashboard(input: DashFilters, now = new Date()) {
     input.operatorId ? eq(T.operatorId, input.operatorId) : undefined,
   ] as (SQL | undefined)[]));
 
-  const byDeptProduct = await db.select({ departmentId: T.departmentId, productId: T.productId, qty: sumQty, n: sql<number>`count(*)::int` })
-    .from(T).where(where).groupBy(T.departmentId, T.productId);
-  const byLineBlock = await db.select({ lineId: T.lineId, blockNo: T.blockNo, productId: T.productId, qty: sumQty })
-    .from(T).where(and(where, isNotNull(T.lineId))).groupBy(T.lineId, T.blockNo, T.productId);
-  const byHour = await db.select({ hour: hourExpr, departmentId: T.departmentId, qty: sumQty })
-    .from(T).where(and(where, isNotNull(T.lineId))).groupBy(hourExpr, T.departmentId);
-  const byDay = await db.select({ workDate: T.workDate, departmentId: T.departmentId, qty: sumQty })
-    .from(T).where(where).groupBy(T.workDate, T.departmentId);
-  const [{ last }] = await db.select({ last: sql<string | null>`max(${T.updatedAt})` }).from(T)
-    .where(and(gte(T.workDate, from), lte(T.workDate, to)));
-  const lastPerLine = await db.selectDistinctOn([T.lineId], { lineId: T.lineId, productId: T.productId, recordedAt: T.recordedAt })
-    .from(T).where(and(eq(T.workDate, to), ne(T.status, "cancelled"), isNotNull(T.lineId)))
-    .orderBy(T.lineId, desc(T.recordedAt));
+  const [byDeptProduct, byLineBlock, byHour, byDay, lastRows, lastPerLine] = await Promise.all([
+    db.select({ departmentId: T.departmentId, productId: T.productId, qty: sumQty, n: sql<number>`count(*)::int` })
+      .from(T).where(where).groupBy(T.departmentId, T.productId),
+    db.select({ lineId: T.lineId, blockNo: T.blockNo, productId: T.productId, qty: sumQty })
+      .from(T).where(and(where, isNotNull(T.lineId))).groupBy(T.lineId, T.blockNo, T.productId),
+    db.select({ hour: hourExpr, departmentId: T.departmentId, qty: sumQty })
+      .from(T).where(and(where, isNotNull(T.lineId))).groupBy(hourExpr, T.departmentId),
+    db.select({ workDate: T.workDate, departmentId: T.departmentId, qty: sumQty })
+      .from(T).where(where).groupBy(T.workDate, T.departmentId),
+    db.select({ last: sql<string | null>`max(${T.updatedAt})` }).from(T).where(where),
+    db.selectDistinctOn([T.lineId], { lineId: T.lineId, productId: T.productId, recordedAt: T.recordedAt })
+      .from(T).where(and(eq(T.workDate, to), ne(T.status, "cancelled"), isNotNull(T.lineId)))
+      .orderBy(T.lineId, desc(T.recordedAt)),
+  ]);
+  const [{ last }] = lastRows;
 
   const productIds = [...new Set(byDeptProduct.map((r) => r.productId).concat(lastPerLine.map((r) => r.productId)))];
   const productRows = productIds.length ? await db.select({ id: products.id, code: products.code, name: products.name, unit: products.unit, isDemo: products.isDemo })

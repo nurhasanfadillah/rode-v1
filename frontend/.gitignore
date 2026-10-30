@@ -9,3 +9,5 @@ next-env.d.ts
 .vercel
 .env*
 !.env.example
+
+.next-local/

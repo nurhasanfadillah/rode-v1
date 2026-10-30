@@ -2,12 +2,12 @@ import { z } from "zod";
 import { db } from "@/db";
 import { clientIp, handler, parseQuery } from "@/lib/api";
 import { rateLimit, requireUser } from "@/lib/auth";
-import { dashFilterSchema } from "@/services/aggregate";
+import { reportFilterSchema } from "@/services/aggregate";
 import { buildReport, toCsv, toXlsx } from "@/services/report";
 import { audit } from "@/services/settings";
 
 export const runtime = "nodejs";
-const schema = dashFilterSchema.extend({ format: z.enum(["csv", "xlsx"]) });
+const schema = reportFilterSchema.and(z.object({ format: z.enum(["csv", "xlsx"]) }));
 
 export const GET = handler(async (req) => {
   const user = await requireUser(["manager", "super_admin"]);

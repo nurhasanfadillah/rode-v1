@@ -6,7 +6,7 @@ import { getDashboard, type DashFilters } from "./aggregate";
 
 export type Cell = string | number | null;
 export interface Section { key: string; title: string; columns: string[]; rows: Cell[][]; note?: string }
-export interface Report { title: string; meta: [string, string][]; sections: Section[] }
+export interface Report { title: string; meta: [string, string][]; sections: Section[]; summary: { department: string; actual: number; target: number | null; pct: number | null; productFiltered: boolean } }
 
 const STATE_LABEL: Record<string, string> = {
   upcoming: "Belum dimulai", empty: "Kosong", partial: "Di bawah target", met: "Target tercapai", neutral: "Tanpa target",
@@ -28,12 +28,13 @@ export async function buildReport(f: DashFilters, now = new Date()): Promise<Rep
   const { from, to } = d.filters;
   const single = from === to;
   const labels = await filterLabels(f);
+  const metric = d.metric;
   const period = single ? fmtDate(from, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : `${fmtDate(from)} s.d. ${fmtDate(to)}`;
 
   const sections: Section[] = [
     {
-      key: "departments", title: "Total per departemen", columns: ["Departemen", "Aktual (pcs)", "Target (pcs)", "Capaian (%)"],
-      rows: d.departments.map((x) => [x.name, x.actual, x.target, x.pct]),
+      key: "departments", title: "Total per departemen", columns: ["Departemen", "Aktual (pcs)", f.productId ? "Target harian (semua produk)" : "Target (pcs)", "Capaian (%)"],
+      rows: d.departments.map((x) => [x.name, x.actual, x.target, f.productId ? null : x.pct]),
       note: "Output tiap departemen adalah tahap proses berbeda dan tidak dijumlahkan sebagai produksi unik.",
     },
     {
@@ -44,15 +45,15 @@ export async function buildReport(f: DashFilters, now = new Date()): Promise<Rep
   if (d.lines.length) {
     sections.push({
       key: "lines", title: "Total per line Sewing",
-      columns: ["Line", "Aktual (pcs)", "Target (pcs)", "Capaian (%)", "Target per blok", "Produk dikerjakan"],
-      rows: d.lines.map((l) => [l.name, l.actual, l.target, l.pct, l.blockTarget, l.products.map((p) => `${p.name} (${p.qty})`).join(", ")]),
+      columns: ["Line", "Aktual (pcs)", f.productId ? "Target harian (semua produk)" : "Target (pcs)", "Capaian (%)", f.productId ? "Target per blok (semua produk)" : "Target per blok", "Produk dikerjakan"],
+      rows: d.lines.map((l) => [l.name, l.actual, l.target, f.productId ? null : l.pct, l.blockTarget, l.products.map((p) => `${p.name} (${p.qty})`).join(", ")]),
       note: "Bandingkan line dengan konteks target, jadwal, dan produk — total pcs saja tidak menunjukkan efisiensi.",
     });
   }
   if (single && d.lines.some((l) => l.blocks.length)) {
     sections.push({
-      key: "blocks", title: "Detail per blok Sewing", columns: ["Line", "Blok", "Jam", "Aktual (pcs)", "Target blok", "Capaian (%)", "Status"],
-      rows: d.lines.flatMap((l) => l.blocks.map((b) => [l.name, b.no, `${b.start}–${b.end}`, b.qty, b.target, pct(b.qty, b.target), STATE_LABEL[b.state]])),
+      key: "blocks", title: "Detail per blok Sewing", columns: ["Line", "Blok", "Jam", "Aktual (pcs)", f.productId ? "Target blok (semua produk)" : "Target blok", "Capaian (%)", "Status"],
+      rows: d.lines.flatMap((l) => l.blocks.map((b) => [l.name, b.no, `${b.start}–${b.end}`, b.qty, b.target, f.productId ? null : pct(b.qty, b.target), f.productId ? "Tidak dibandingkan" : STATE_LABEL[b.state]])),
     });
   }
   if (!single) {
@@ -70,6 +71,7 @@ export async function buildReport(f: DashFilters, now = new Date()): Promise<Rep
       ["Dibuat pada", fmtDateTime(now)], ["Transaksi terakhir", d.lastUpdated ? fmtDateTime(d.lastUpdated) : "-"],
     ],
     sections,
+    summary: { department: metric?.name ?? "-", actual: metric?.actual ?? 0, target: metric?.target ?? null, pct: f.productId ? null : metric?.pct ?? null, productFiltered: Boolean(f.productId) },
   };
 }
 
@@ -87,7 +89,7 @@ export function toCsv(r: Report): string {
     const s = typeof v === "number" ? csvNum(v) : String(safeCell(v));
     return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const lines: string[] = [esc(r.title), ...r.meta.map(([k, v]) => `${esc(k)};${esc(v)}`), ""];
+  const lines: string[] = [esc(r.title), ...r.meta.map(([k, v]) => `${esc(k)};${esc(v)}`), "", esc("Ringkasan"), `${esc(`Aktual ${r.summary.department}`)};${esc(r.summary.actual)}`, `${esc(r.summary.productFiltered ? "Target harian (semua produk)" : `Target ${r.summary.department}`)};${esc(r.summary.target)}`, `${esc("Capaian")};${esc(r.summary.pct == null ? "Tidak ditampilkan" : `${r.summary.pct}%`)}`, ""];
   for (const s of r.sections) {
     lines.push(esc(s.title), s.columns.map(esc).join(";"), ...s.rows.map((row) => row.map(esc).join(";")));
     if (s.note) lines.push(esc(`Catatan: ${s.note}`));
@@ -102,13 +104,19 @@ export async function toXlsx(r: Report): Promise<Buffer> {
   wb.creator = "RODE";
   wb.created = new Date();
   const info = wb.addWorksheet("Info");
-  info.addRow([r.title]).font = { bold: true, size: 14 };
-  r.meta.forEach(([k, v]) => info.addRow([k, v]));
+  info.addRow([safeCell(r.title)]).font = { bold: true, size: 14 };
+  r.meta.forEach(([k, v]) => info.addRow([safeCell(k), safeCell(v)]));
+  info.addRow([]);
+  info.addRow(["Ringkasan", "Nilai"]).font = { bold: true };
+  info.addRow([safeCell(`Aktual ${r.summary.department}`), r.summary.actual]);
+  info.addRow([safeCell(r.summary.productFiltered ? "Target harian (semua produk)" : `Target ${r.summary.department}`), r.summary.target]);
+  info.addRow(["Capaian", r.summary.pct == null ? "Tidak ditampilkan" : `${r.summary.pct}%`]);
   info.getColumn(1).width = 22;
   info.getColumn(2).width = 60;
   for (const s of r.sections) {
     const ws = wb.addWorksheet(s.title.slice(0, 31));
-    const head = ws.addRow(s.columns);
+    ws.pageSetup = { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+    const head = ws.addRow(s.columns.map(safeCell));
     head.font = { bold: true, color: { argb: "FFFFFFFF" } };
     head.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0A2463" } };
     s.rows.forEach((row) => ws.addRow(row.map(safeCell)));
@@ -118,7 +126,8 @@ export async function toXlsx(r: Report): Promise<Buffer> {
       if (/\(%\)/.test(c)) col.numFmt = "0.0";
       else if (/pcs|blok$/i.test(c)) col.numFmt = "#,##0";
     });
-    if (s.note) { ws.addRow([]); ws.addRow([`Catatan: ${s.note}`]).font = { italic: true }; }
+    if (s.note) { ws.addRow([]); ws.addRow([safeCell(`Catatan: ${s.note}`)]).font = { italic: true }; }
+    ws.pageSetup.printTitlesRow = "1:1";
     ws.views = [{ state: "frozen", ySplit: 1 }];
   }
   return Buffer.from(await wb.xlsx.writeBuffer());

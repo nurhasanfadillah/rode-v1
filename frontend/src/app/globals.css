@@ -43,4 +43,8 @@
   @page { size: A4; margin: 12mm; }
   body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   [data-sonner-toaster] { display: none !important; }
+  [data-testid="report-summary"] { break-inside: avoid; }
+  [data-testid^="report-section-"] { overflow: visible !important; margin-bottom: 8mm; }
+  [data-testid^="report-section-"] table { width: 100%; }
+  [data-testid^="report-section-"] tr { break-inside: avoid; }
 }

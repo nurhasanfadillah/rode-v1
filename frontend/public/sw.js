@@ -1,6 +1,6 @@
 // RODE service worker: caches only static assets. API and navigations always go to the network,
 // so production data is never served from cache and offline writes are never faked.
-const CACHE = "rode-static-v1";
+const CACHE = "rode-static-v2";
 const OFFLINE_HTML = `<!doctype html><html lang="id"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RODE - Offline</title>
 <body style="font-family:sans-serif;background:#F8FAFC;color:#0F172A;display:grid;place-items:center;min-height:100vh;margin:0">
 <div style="text-align:center;padding:24px"><h1 style="color:#0A2463">Anda sedang offline</h1>
@@ -21,7 +21,14 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(fetch(req).catch(() => new Response(OFFLINE_HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } })));
     return;
   }
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) {
+  if (url.pathname.startsWith("/_next/static/")) {
+    e.respondWith(fetch(req).then(async (res) => {
+      if (res.ok) (await caches.open(CACHE)).put(req, res.clone());
+      return res;
+    }).catch(async () => (await caches.match(req)) ?? Response.error()));
+    return;
+  }
+  if (url.pathname.startsWith("/icons/")) {
     e.respondWith(caches.open(CACHE).then(async (c) => {
       const hit = await c.match(req);
       if (hit) return hit;

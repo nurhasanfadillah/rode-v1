@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import useSWR from "swr";
-import { FileSpreadsheet, FileText, Printer } from "lucide-react";
+import { FileSpreadsheet, FileText, Printer, RotateCcw, X } from "lucide-react";
+import { toast } from "sonner";
 import { fetcher, qs } from "@/lib/client";
 import { fmtNum, fmtPct } from "@/lib/format";
 import { addDays, todayJakarta } from "@/lib/time";
@@ -14,10 +15,42 @@ type F = { from: string; to: string; departmentId?: string; lineId?: string; shi
 export function ReportsPage() {
   const today = todayJakarta();
   const [f, setF] = useState<F>({ from: today, to: today });
+  const [exporting, setExporting] = useState<"csv" | "xlsx" | null>(null);
   const { data: meta } = useSWR<Meta>("/api/meta", fetcher, { revalidateOnFocus: false });
   const query = qs(f);
   const { data, error, mutate, isValidating } = useSWR<Report>(`/api/reports${query}`, fetcher, { keepPreviousData: true, revalidateOnFocus: false });
   const set = (k: keyof F, v: string) => setF((p) => ({ ...p, [k]: v || undefined }) as F);
+  const resetFilters = () => setF({ from: today, to: today });
+  const exportReport = async (format: "csv" | "xlsx") => {
+    setExporting(format);
+    try {
+      const response = await fetch(`/api/reports/export${qs({ ...f, format })}`, { credentials: "same-origin", cache: "no-store" });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error ?? `Ekspor gagal (${response.status})`);
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `RODE_Laporan_${f.from}_${f.to}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast.success(`Laporan ${format.toUpperCase()} berhasil diunduh`);
+    } catch (err) {
+      toast.error("Gagal mengekspor laporan", { description: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setExporting(null);
+    }
+  };
+  const activeFilters = [
+    { key: "departmentId" as const, label: "Departemen", value: meta?.departments.find((x) => x.id === f.departmentId)?.name },
+    { key: "lineId" as const, label: "Line", value: meta?.lines.find((x) => x.id === f.lineId)?.name },
+    { key: "shiftId" as const, label: "Shift", value: meta?.shifts.find((x) => x.id === f.shiftId)?.name },
+    { key: "productId" as const, label: "Produk", value: meta?.products.find((x) => x.id === f.productId)?.name },
+  ].filter((x): x is typeof x & { value: string } => Boolean(x.value));
   const preset = (from: string, to = today) => setF((p) => ({ ...p, from, to }));
   const sel = "h-10 rounded-lg border border-slate-300 bg-white px-2 text-sm";
   const btn = "inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold";
@@ -27,8 +60,8 @@ export function ReportsPage() {
       <div className="print:hidden">
         <PageHeader title="Laporan" subtitle="Laporan harian (tanggal awal = akhir) atau rentang tanggal. Ekspor mengikuti filter yang dipilih."
           actions={<>
-            <a href={`/api/reports/export${qs({ ...f, format: "csv" })}`} className={`${btn} border bg-white text-navy hover:bg-slate-50`} data-testid="export-csv-button"><FileText className="h-4 w-4" />CSV</a>
-            <a href={`/api/reports/export${qs({ ...f, format: "xlsx" })}`} className={`${btn} bg-teal text-white hover:bg-teal-600`} data-testid="export-xlsx-button"><FileSpreadsheet className="h-4 w-4" />Excel</a>
+            <button type="button" onClick={() => exportReport("csv")} disabled={exporting !== null} aria-busy={exporting === "csv"} className={`${btn} border bg-white text-navy hover:bg-slate-50 disabled:opacity-60`} data-testid="export-csv-button"><FileText className="h-4 w-4" />{exporting === "csv" ? "Menyiapkan CSV…" : "CSV"}</button>
+            <button type="button" onClick={() => exportReport("xlsx")} disabled={exporting !== null} aria-busy={exporting === "xlsx"} className={`${btn} bg-teal text-white hover:bg-teal-600 disabled:opacity-60`} data-testid="export-xlsx-button"><FileSpreadsheet className="h-4 w-4" />{exporting === "xlsx" ? "Menyiapkan Excel…" : "Excel"}</button>
             <button onClick={() => window.print()} disabled={!data} className={`${btn} bg-navy text-white hover:bg-navy-700 disabled:opacity-50`} data-testid="print-report-button"><Printer className="h-4 w-4" />Cetak / PDF</button>
           </>} />
         <div className="card-surface mb-5 space-y-3 p-3" data-testid="report-filters">
@@ -53,10 +86,23 @@ export function ReportsPage() {
               <option value="">Semua produk</option>{meta?.products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
+          {activeFilters.length > 0 && <div className="flex flex-wrap items-center gap-2" aria-label="Filter aktif">
+            {activeFilters.map(({ key, label, value }) => <button key={key} type="button" onClick={() => set(key, "")} className="inline-flex min-h-9 items-center gap-1 rounded-full bg-slate-100 px-3 text-xs text-slate-700 hover:bg-slate-200" aria-label={`Hapus filter ${label}: ${value}`}>
+              {label}: {value}<X className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>)}
+            <button type="button" onClick={resetFilters} className="inline-flex min-h-9 items-center gap-1 px-2 text-xs font-semibold text-navy hover:underline"><RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />Reset filter</button>
+          </div>}
         </div>
       </div>
       {error && !data ? <ErrorState message={error.message} onRetry={() => mutate()} /> : !data ? <Skel className="h-96" /> : (
         <div className={`space-y-5 transition-opacity ${isValidating ? "opacity-60" : ""}`} data-testid="report-document">
+          {isValidating && <p className="sr-only" role="status" aria-live="polite">Memperbarui laporan…</p>}
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Ringkasan laporan" data-testid="report-summary">
+            <SummaryCard label={`Aktual ${data.summary.department}`} value={`${fmtNum(data.summary.actual)} pcs`} />
+            <SummaryCard label={data.summary.productFiltered ? "Target harian (semua produk)" : `Target ${data.summary.department}`} value={data.summary.target == null ? "—" : `${fmtNum(data.summary.target)} pcs`} />
+            <SummaryCard label="Capaian" value={data.summary.pct == null ? "Tidak ditampilkan" : fmtPct(data.summary.pct)} />
+          </section>
+          {data.summary.productFiltered && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Filter produk membatasi angka aktual, sedangkan target tetap target total harian. Persentase capaian disembunyikan agar perbandingannya tidak menyesatkan.</p>}
           <div className="card-surface p-5 print:border-0 print:p-0 print:shadow-none">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -69,6 +115,7 @@ export function ReportsPage() {
               {data.meta.map(([k, v]) => <div key={k} className="flex gap-2"><dt className="w-36 shrink-0 text-slate-500">{k}</dt><dd className="font-medium">{v}</dd></div>)}
             </dl>
           </div>
+          <p className="text-xs text-slate-500">Total aktual lintas departemen menghitung tahapan proses yang berbeda; angka ini bukan jumlah produksi unik.</p>
           {data.sections.map((s) => <SectionTable key={s.key} s={s} />)}
         </div>
       )}
@@ -76,14 +123,18 @@ export function ReportsPage() {
   );
 }
 
+function SummaryCard({ label, value }: { label: string; value: string }) {
+  return <div className="card-surface p-4 print:break-inside-avoid print:shadow-none"><p className="text-xs font-medium text-slate-500">{label}</p><p className="mt-1 text-xl font-bold text-navy">{value}</p></div>;
+}
+
 function SectionTable({ s }: { s: Section }) {
   const isPct = (c: string) => c.includes("(%)");
   return (
-    <section className="card-surface break-inside-avoid overflow-x-auto p-4 print:border-0 print:p-0 print:shadow-none" data-testid={`report-section-${s.key}`}>
+    <section className="card-surface overflow-x-auto p-4 print:break-inside-auto print:border-0 print:p-0 print:shadow-none" data-testid={`report-section-${s.key}`}>
       <h3 className="mb-2 font-semibold text-slate-900">{s.title}</h3>
       {s.rows.length === 0 ? <EmptyState title="Tidak ada data untuk filter ini" testId={`report-empty-${s.key}`} /> : (
         <table className="w-full min-w-[520px] text-sm print:min-w-0 print:text-[11px]">
-          <thead className="border-b text-left text-xs uppercase text-slate-500"><tr>{s.columns.map((c) => <th key={c} className="px-2 py-2">{c}</th>)}</tr></thead>
+          <thead className="border-b text-left text-xs uppercase text-slate-500 print:table-header-group"><tr>{s.columns.map((c) => <th key={c} scope="col" className="px-2 py-2">{c}</th>)}</tr></thead>
           <tbody className="divide-y">
             {s.rows.map((r, i) => (
               <tr key={i}>{r.map((v, j) => (

@@ -14,19 +14,20 @@ export function BlockGrid({ blocks, breaks = [], tv = false, compact = false, co
       <div className={cn("grid gap-1.5", cols ?? (compact ? "grid-cols-5 sm:grid-cols-10" : "grid-cols-3 sm:grid-cols-5"))}>
         {blocks.map((b) => {
           const m = STATE_META[b.state];
-          const Icon = m.icon;
+          const Icon = b.breakOnly ? Coffee : m.icon;
+          const label = b.breakOnly ? "Istirahat" : m.label;
           return (
-            <div key={b.no} data-testid={`${testId}-block-${b.no}`} data-state={b.state} title={`Blok ${b.no} · ${b.start}–${b.end} · ${m.label}`}
-              className={cn("relative rounded-lg border p-2 transition-colors", tv ? m.tv : m.light, b.current && (tv ? "ring-2 ring-white" : "ring-2 ring-navy ring-offset-1"))}>
+            <div key={b.no} data-testid={`${testId}-block-${b.no}`} data-state={b.breakOnly ? "break" : b.state} title={b.breakOnly ? `Blok ${b.no} · ${b.start}–${b.end} · Istirahat` : `Blok ${b.no} · ${b.start}–${b.end} · ${m.label}`}
+              className={cn("relative rounded-lg border p-2 transition-colors", b.breakOnly ? (tv ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/40" : "bg-indigo-50 text-indigo-700 border-indigo-200") : tv ? m.tv : m.light, b.current && (tv ? "ring-2 ring-white" : "ring-2 ring-navy ring-offset-1"))}>
               <div className="flex items-center justify-between text-[10px] font-bold uppercase opacity-90">
-                <span>B{b.no}</span><Icon className="h-3 w-3" aria-label={m.label} />
+                <span>B{b.no}</span><Icon className="h-3 w-3" aria-label={label} />
               </div>
               <div className={cn("num truncate font-extrabold leading-tight", compact ? "text-base" : "text-xl")}>
-                {b.qty}{b.target != null && !compact && <span className="text-[11px] font-semibold opacity-75">/{b.target}</span>}
+                {b.breakOnly ? "–" : b.qty}{b.target != null && !compact && <span className="text-[11px] font-semibold opacity-75">/{b.target}</span>}
               </div>
               {compact && b.target != null && <div className="num truncate text-[10px] font-semibold leading-none opacity-75">/{b.target}</div>}
               {!compact && <div className="num text-[10px] opacity-80">{b.start}–{b.end}</div>}
-              {!compact && <div className="sr-only">{m.label}</div>}
+              {!compact && <div className="sr-only">{label}</div>}
             </div>
           );
         })}
