@@ -7,9 +7,11 @@ import { cn } from "@/lib/utils";
 export function PageHeader({ title, subtitle, actions, mobileTitleAction }: { title: string; subtitle?: ReactNode; actions?: ReactNode; mobileTitleAction?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div className={mobileTitleAction ? "flex items-start justify-between gap-3 sm:block" : undefined}>
-        <h1 className="text-2xl font-bold text-navy sm:text-3xl" data-testid="page-title">{title}</h1>
-        {mobileTitleAction && <div className="shrink-0 sm:hidden">{mobileTitleAction}</div>}
+      <div>
+        <div className={mobileTitleAction ? "flex items-start justify-between gap-3 sm:block" : undefined}>
+          <h1 className="text-2xl font-bold text-navy sm:text-3xl" data-testid="page-title">{title}</h1>
+          {mobileTitleAction && <div className="shrink-0 sm:hidden">{mobileTitleAction}</div>}
+        </div>
         {subtitle && <div className="mt-1 text-sm text-slate-500">{subtitle}</div>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
