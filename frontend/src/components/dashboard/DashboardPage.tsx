@@ -29,15 +29,19 @@ export function DashboardPage({ initialDate }: { initialDate: string }) {
     router.push(`/history${qs({ ...range, ...f, ...extra, status: "valid" })}`);
   };
   const sel = "h-10 rounded-lg border border-slate-300 bg-white px-2 text-sm";
+  const filterButton = (className = "", testId = "dashboard-filter-toggle") => (
+    <button type="button" className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy ${className}`} onClick={() => setFiltersOpen((open) => !open)} aria-label={filtersOpen ? "Sembunyikan filter" : "Tampilkan filter"} title={filtersOpen ? "Sembunyikan filter" : "Tampilkan filter"} aria-expanded={filtersOpen} aria-controls={filtersOpen ? "dashboard-filters" : undefined} data-testid={testId}><Filter className="h-4 w-4" /></button>
+  );
 
   return (
     <div>
       <PageHeader
         title="Dashboard Produksi"
         subtitle={data ? <span data-testid="dashboard-range">{data.filters.from === data.filters.to ? fmtDate(data.filters.to) : `${fmtDate(data.filters.from)} – ${fmtDate(data.filters.to)}`} · WIB</span> : "Memuat…"}
+        mobileTitleAction={filterButton()}
         actions={
           <>
-          <button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy" onClick={() => setFiltersOpen((open) => !open)} aria-label={filtersOpen ? "Sembunyikan filter" : "Tampilkan filter"} title={filtersOpen ? "Sembunyikan filter" : "Tampilkan filter"} aria-expanded={filtersOpen} aria-controls={filtersOpen ? "dashboard-filters" : undefined} data-testid="dashboard-filter-toggle"><Filter className="h-4 w-4" /></button>
+          {filterButton("hidden sm:grid", "dashboard-filter-toggle-desktop")}
           <div className="flex items-center gap-2 rounded-full border bg-white px-3 py-1.5 text-xs text-slate-600" data-testid="dashboard-last-update">
             <span className={`h-2 w-2 rounded-full ${error ? "bg-red-500" : "bg-emerald-500"} ${isValidating ? "animate-pulse" : ""}`} />
             {error ? "Koneksi terganggu — mencoba ulang" : data ? <>Data server {fmtTime(data.serverTime)} · transaksi terakhir {data.lastUpdated ? fmtTime(data.lastUpdated) : "—"}</> : "…"}
